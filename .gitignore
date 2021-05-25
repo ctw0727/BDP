@@ -1,0 +1,8 @@
+# Node.js
+node_modules
+dist
+dist.zip 
+
+# temp Folder
+/[Tt]emp/
+/[Kk]eys/

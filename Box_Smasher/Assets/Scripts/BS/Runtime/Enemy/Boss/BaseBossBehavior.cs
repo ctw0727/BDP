@@ -13,9 +13,11 @@ namespace BS.Enemy.Boss{
         public UnityEvent OnHit;
         #endregion
 
+        public GameObject _eraserPrefab;
+
         protected BaseBoss _boss;
         protected PlayerController _player;
-        public BulletEraser _eraser; // 임시로 public
+        protected BulletEraser _eraser; // 임시로 public
         protected BehaviorTree _tree;
 
         /// <summary>
@@ -25,6 +27,7 @@ namespace BS.Enemy.Boss{
             OnHit = new UnityEvent();
             _boss = GetComponent<BaseBoss>();
             _player = FindObjectOfType<PlayerController>();
+            _eraser = BulletEraser.Create(_eraserPrefab, this.gameObject);
 
             if(_eraser == null){
                 Debug.LogWarning("eraser가 할당되지 않았습니다.");

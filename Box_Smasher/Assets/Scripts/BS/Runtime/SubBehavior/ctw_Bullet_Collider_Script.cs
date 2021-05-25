@@ -15,8 +15,7 @@ public class ctw_Bullet_Collider_Script : MonoBehaviour
 	
 	public bool OnWork = true;
 	
-	BulletEraser Eraser1;
-	BulletEraser Eraser2;
+	BulletEraser[] _erasers;
 	
 	Transform PlayerTransform;
 	BaseBoss _boss;
@@ -29,8 +28,7 @@ public class ctw_Bullet_Collider_Script : MonoBehaviour
 		BulletRigid2D = GetComponent<Rigidbody2D>();
 		BulletSprite = GetComponent<SpriteRenderer>();
 		
-		Eraser1 = GameObject.Find("BS_Eraser_Player").GetComponent<BulletEraser>();
-		Eraser2 = GameObject.Find("BS_Eraser_Boss").GetComponent<BulletEraser>();
+		_erasers = FindObjectsOfType<BulletEraser>();
 		
 		PlayerTransform = GameObject.Find("BS_Player").GetComponent<Transform>();
 		_boss = GameObject.Find("BS_Boss").GetComponent<BaseBoss>();
@@ -68,8 +66,14 @@ public class ctw_Bullet_Collider_Script : MonoBehaviour
 	
 	void Rendering(){
 		
-		if ( (Eraser1._sprite.enabled != false)||(Eraser2._sprite.enabled != false) ) OnWork = false;
-		else OnWork = true;
+		foreach(var eraser in _erasers){
+			if(eraser._sprite.enabled != false){
+				OnWork = false;
+				break;
+			}else{
+				OnWork = true;
+			}
+		}
 		
 		if (_boss.IsDead){
 			OnWork = false;

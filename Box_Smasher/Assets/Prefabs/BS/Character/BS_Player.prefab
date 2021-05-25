@@ -319,11 +319,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd877e1457915f64ab4e5419c41aafdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _eraserPrefab: {fileID: 5509540706980799759, guid: 406a48824a2a9894899a23703c658f90,
+    type: 3}
   _maxPower: 2000
   _currentPower: 0
   _bodyAnimator: {fileID: 5762887641646660150}
   _faceAnimator: {fileID: 7335033103268225992}
-  _eraser: {fileID: 0}
   _normal: {fileID: 0}
   _bouncy: {fileID: 0}
   _moveDirection: 0

@@ -55,7 +55,6 @@
                 float4 p = i.grabPos;
 
                 half4 d = tex2D(_NoiseTex, i.grabPos);
-                half4 color = tex2D(_MainTex, i.grabPos);
                 p += (d * _Intensity);
 
                 half4 bgcolor = tex2Dproj(_BackgroundTexture, p);

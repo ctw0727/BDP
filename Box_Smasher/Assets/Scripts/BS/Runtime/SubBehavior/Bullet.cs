@@ -22,8 +22,7 @@ namespace BS.Projectile{
 		
 		public float Alpha = 1f;
 		
-		BulletEraser Eraser1;
-		BulletEraser Eraser2;
+		BulletEraser[] _erasers;
 		
 		void Start(){
 			
@@ -35,8 +34,7 @@ namespace BS.Projectile{
 			
 			PlayerScript = GameObject.Find("BS_Player").GetComponent<PlayerController>();
 			
-			Eraser1 = GameObject.Find("BS_Eraser_Player").GetComponent<BulletEraser>();
-			Eraser2 = GameObject.Find("BS_Eraser_Boss").GetComponent<BulletEraser>();
+			_erasers = FindObjectsOfType<BulletEraser>();
 			
 			BulletTransform.localScale = new Vector2(1f/3f , 0.5f/3f);
 		}
@@ -78,8 +76,12 @@ namespace BS.Projectile{
 		}
 		
 		void Rendering(){
-			
-			if ( (Eraser1._sprite.enabled != false)||(Eraser2._sprite.enabled != false) ) OnWork = false;
+			foreach(var eraser in _erasers){
+				if(eraser._sprite.enabled != false){
+					OnWork = false;
+					break;
+				}
+			}
 			
 			BulletRigid2D.rotation = BulletRigid2D.rotation + Roll;
 			

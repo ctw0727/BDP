@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using BS.Enemy.Boss;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ public class BulletEraser : MonoBehaviour
 	float _originRadius;
 
 	
-    void Awake(){
+    public void Init(){
 		_collider = GetComponent<CircleCollider2D>() as CircleCollider2D;
 		_originRadius = _collider.radius;
 		_sprite.enabled = false;
@@ -39,6 +40,21 @@ public class BulletEraser : MonoBehaviour
 		_collider.radius = _originRadius;
 		_sprite.enabled = false;
 		yield return null;
+	}
+
+	/// <summary>
+	/// Bullet Eraser를 만듭니다.
+	/// </summary>
+	/// <param name="eraserPrefab">Bullet Eraser가 될 prefab</param>
+	/// <param name="following">Bullet Eraser가 따라가야할 gameobject</param>
+	/// <returns></returns>
+	public static BulletEraser Create(GameObject eraserPrefab, GameObject following){
+		GameObject obj = Instantiate(eraserPrefab);
+		obj.name = String.Format("{0}_Bullet_Eraser", following.name);
+		BulletEraser eraser = obj.GetComponent<BulletEraser>();
+		eraser?.Init();
+		eraser._followingObj = following;
+		return eraser;
 	}
 
 	private void Update()

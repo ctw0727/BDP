@@ -34,7 +34,7 @@ public class ctw_Platform_behavior : MonoBehaviour
 		if ((PlayerTransform.position.y >= PlatformTransform.position.y + 0.2)&&(DownCool == 0)){
 			PlatformCollider.isTrigger = false;
 			
-			if ((CallScript._down == true)&&(PlayerTransform.position.y - PlatformTransform.position.y <= 3)){
+			if ((CallScript._down == true) && (PlayerTransform.position.y - PlatformTransform.position.y <= 3)){
 				PlatformCollider.isTrigger = true;
 				DownCool = 1;
 				Invoke("Cooler",0.5f);
