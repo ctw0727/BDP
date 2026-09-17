@@ -1,7 +1,7 @@
 {
     "name": "BS",
+    "rootNamespace": "",
     "references": [
-        "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
         "GUID:5f9390b2baf7e4944aa864f61f9dd4c4"
     ],
     "includePlatforms": [],
