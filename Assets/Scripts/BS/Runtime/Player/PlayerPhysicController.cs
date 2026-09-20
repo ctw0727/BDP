@@ -90,12 +90,12 @@ namespace BS.Player
             if (_groundChecker != null)
             {
                 Gizmos.color = Color.green;
-                Gizmos.DrawSphere(_groundChecker.position, _groundRadius);
+                Gizmos.DrawWireSphere(_groundChecker.position, _groundRadius);
             }
             else
             {
                 Gizmos.color = Color.green;
-                Gizmos.DrawSphere(this.transform.position + Vector3.down * _groundRadius, _groundRadius);
+                Gizmos.DrawWireSphere(this.transform.position + Vector3.down * _groundRadius, _groundRadius);
             }
         }
     }

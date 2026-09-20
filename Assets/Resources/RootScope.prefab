@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4415930625211618009}
   - component: {fileID: 6932239755526362501}
+  - component: {fileID: 4586660772340611781}
   m_Layer: 0
   m_Name: RootScope
   m_TagString: Untagged
@@ -44,3 +45,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5312032623c34414a54ea00e35a7eb8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Reflex::Reflex.Core.ContainerScope
+--- !u!114 &4586660772340611781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4386564163066156862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d4fa09283b3b294da1973c86f7832e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BS.Runtime::BS.Installers.RootInstaller
