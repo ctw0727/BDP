@@ -17,7 +17,6 @@ namespace BS.Installers
                 .RegisterType(typeof(PhysicsWorldService),
                     Lifetime.Singleton, Reflex.Enums.Resolution.Eager)
                 .RegisterValue(_physicsCoreSettings);
-
         }
     }
 }
