@@ -1,8 +1,13 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using BS.Enemy.Boss;
 using BS.Manager.Cameras;
+using BS.Runtime.Extensions;
+using BS.Runtime.Input;
+using R3;
+using Reflex.Core;
+using Reflex.Extensions;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace BS.Player
 {
@@ -97,6 +102,66 @@ namespace BS.Player
 
 			_mainCamera = CameraManager.Instance.MainCamera;
 		}
+
+		void Start()
+		{
+			SubscribeInputEvents();
+		}
+
+		void SubscribeInputEvents()
+		{
+			Container sceneContainer = this.gameObject.scene.GetSceneContainer();
+
+			if (sceneContainer.TryResolve<InputService>(out var inputService))
+			{
+				inputService.OnPlayerJump
+					.Subscribe(OnJumpPerformed)
+					.AddTo(this);
+				inputService.OnPlayerMove
+					.Subscribe(OnMovePerformed)
+					.AddTo(this);
+				inputService.SetPlayerInputEnable(true);
+			}
+		}
+
+		void OnMovePerformed(Vector2 input)
+		{
+			if (input.magnitude == 0)
+			{
+				_moveDirection = 0;
+				_physicManager._isMoving = false;
+				return;
+			}
+
+			_moveDirection = input.x;
+			_physicManager._isMoving = true;
+
+			if (input.y > 0)
+			{
+				Jump();
+			}
+			else
+			{
+				_down = input.y < 0;
+			}
+		}
+
+		void OnJumpPerformed(Unit _)
+		{
+			Jump();
+		}
+
+		void Jump()
+		{
+			if (!_physicManager._onAir)
+			{
+				_rigid.linearVelocity = new Vector2(_rigid.linearVelocity.x, 40);
+				GenEffect(0f, 30f, 1f, 4);
+				GenEffect(180f, 30f, 1f, 4);
+				_physicManager._onAir = true;
+			}
+		}
+
 		#endregion
 
 		// Maths
@@ -226,49 +291,12 @@ namespace BS.Player
 
 		void InputMove()
 		{
-			_moveDirection = 0;
-
 			if (_onHit == 0)
 			{
-
-				if (Input.GetKey(KeyCode.A))
-				{
-					_moveDirection--;
-					_physicManager._isMoving = true;
-				}
-				else if (Input.GetKey(KeyCode.D))
-				{
-					_moveDirection++;
-					_physicManager._isMoving = true;
-				}
-				else
-					_physicManager._isMoving = false;
-
-
 				if (Mathf.Abs(_rigid.linearVelocity.x) < 15)
 				{
 					_rigid.linearVelocity = new Vector2(_rigid.linearVelocity.x + 1 * _moveDirection, _rigid.linearVelocity.y);
 				}
-
-				if (Input.GetKey(KeyCode.S))
-				{
-					_down = true;
-				}
-				else
-				{
-					_down = false;
-				}
-
-				if ((Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space)) && !_physicManager._onAir)
-				{
-					_rigid.linearVelocity = new Vector2(_rigid.linearVelocity.x, 40);
-					GenEffect(0f, 30f, 1f, 4);
-					GenEffect(180f, 30f, 1f, 4);
-					_physicManager._onAir = true;
-				}
-
-
-				//Debug.Log(ismoving);
 			}
 		}
 
@@ -431,7 +459,7 @@ namespace BS.Player
 			}
 		}
 
-		private void Update()
+		void Update()
 		{
 			if (!_isDead && IsControllable)
 			{
