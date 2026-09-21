@@ -100,7 +100,7 @@ namespace BS.Player
 				Debug.LogError("effector가 할당되어 있지 않습니다.");
 			}
 
-			_mainCamera = CameraManager.Instance.MainCamera;
+			_mainCamera = Camera.main;
 		}
 
 		void Start()
@@ -114,12 +114,18 @@ namespace BS.Player
 
 			if (sceneContainer.TryResolve<InputService>(out var inputService))
 			{
-				inputService.OnPlayerJump
-					.Subscribe(OnJumpPerformed)
-					.AddTo(this);
 				inputService.OnPlayerMove
 					.Subscribe(OnMovePerformed)
 					.AddTo(this);
+
+				inputService.OnPlayerJump
+					.Subscribe(OnJumpPerformed)
+					.AddTo(this);
+
+				inputService.OnPlayerCharge
+					.Subscribe(OnChargePerformed)
+					.AddTo(this);
+
 				inputService.SetPlayerInputEnable(true);
 			}
 		}
@@ -149,6 +155,49 @@ namespace BS.Player
 		void OnJumpPerformed(Unit _)
 		{
 			Jump();
+		}
+
+		Vector2 _lastChargeDirection;
+
+		// TODO: 1. collision 교체 2. rendering 교체  3. Release 이벤트로 발사 처리 코드 정리 필요
+		// ! 임시로 납땜 처리됨 (old input system만 제거된 상태)
+		void OnChargePerformed(Vector2 chargePoint)
+		{
+			if (!_physicManager._onAir)
+			{
+				return;
+			}
+
+			bool isCharging = chargePoint != Vector2.zero;
+
+			if (isCharging && _physicManager._onAir)
+			{
+				_lastChargeDirection = (chargePoint - (Vector2)this.transform.position).normalized;
+				float amount = _maxPower * 0.015f;
+				_currentPower += amount * _lastChargeDirection.x;
+
+				_rigid.angularDamping = 0.1f;
+				_rigid.linearDamping = 2.5f;
+				_rigid.gravityScale = 0.5f;
+				_isCharging = true;
+			}
+
+			if (!isCharging)
+			{
+				if (Mathf.Abs(_currentPower) >= _maxPower)
+				{
+					_currentPower = (_currentPower > 0 ? 1 : -1) * _maxPower;
+				}
+
+				_rigid.AddForce(_lastChargeDirection * Mathf.Abs(_currentPower) / 40f, ForceMode2D.Impulse);
+				_collider.sharedMaterial = _bouncy;
+
+				_isCharging = false;
+				_currentPower = 0;
+				_rigid.angularDamping = 0.2f;
+				_rigid.linearDamping = 0.2f;
+				_rigid.gravityScale = 9.8f;
+			}
 		}
 
 		void Jump()
@@ -201,23 +250,6 @@ namespace BS.Player
 			yield return null;
 		}
 
-		// Gets
-		Vector2 GetForceDirection()
-		{
-
-			Vector3 PlayerPos = this.transform.position;
-			Vector3 MouseStaticPos = new Vector3(_mainCamera.ScreenToWorldPoint(Input.mousePosition).x, _mainCamera.ScreenToWorldPoint(Input.mousePosition).y, 0);
-			Vector3 MousePrivatePos = MouseStaticPos - PlayerPos;
-
-			float RangeKey = Math_2D_Force(MousePrivatePos.x, MousePrivatePos.y);
-
-			MousePrivatePos = MousePrivatePos / RangeKey;
-
-			Vector2 ForceDirection = new Vector2(MousePrivatePos.x, MousePrivatePos.y);
-
-			return ForceDirection;
-		}
-
 		float Get_Angle_byPosition(Vector3 Target, Vector3 Pos)
 		{
 			return (Mathf.Atan2(Target.y - Pos.y, Target.x - Pos.x) * Mathf.Rad2Deg);
@@ -232,11 +264,6 @@ namespace BS.Player
 		public bool OnAir()
 		{
 			return _physicManager._onAir;
-		}
-
-		public bool IsMoving()
-		{
-			return _physicManager._isMoving;
 		}
 
 		public bool IsFalling()
@@ -291,92 +318,12 @@ namespace BS.Player
 
 		void InputMove()
 		{
-			if (_onHit == 0)
+			if (_onHit == 0 && !_isCharging)
 			{
 				if (Mathf.Abs(_rigid.linearVelocity.x) < 15)
 				{
 					_rigid.linearVelocity = new Vector2(_rigid.linearVelocity.x + 1 * _moveDirection, _rigid.linearVelocity.y);
 				}
-			}
-		}
-
-		float AngleBetweenTwoPoints(Vector3 a, Vector3 b)
-		{
-			return Mathf.Atan2(a.y - b.y, a.x - b.x) * Mathf.Rad2Deg;
-		}
-
-		void InputAttack()
-		{
-
-			if (Input.GetMouseButtonDown(0) && _physicManager._onAir && (_onHit != 2))
-			{
-				_currentPower = 0;
-				_isCharging = true;
-				_onHit = 1;
-			}
-
-			if ((Input.GetMouseButton(0)) && _physicManager._onAir && (_onHit != 2))
-			{
-				Vector2 pos = this.transform.position;
-				Vector2 mouseOnWorld = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-
-				float angle = AngleBetweenTwoPoints(pos, mouseOnWorld);
-
-				transform.rotation = Quaternion.Euler(new Vector3(0f, 0f, angle));
-
-				float amount = _maxPower * 0.015f;
-				float direction = (mouseOnWorld - pos).x <= 0 ? 1 : -1;
-
-				_currentPower += amount * direction;
-			}
-
-			if ((Input.GetMouseButtonUp(0)) && (_onHit == 1))
-			{
-				if (Mathf.Abs(_currentPower) >= _maxPower)
-				{
-					_currentPower = (_currentPower > 0 ? 1 : -1) * _maxPower;
-				}
-
-				_rigid.linearVelocity = GetForceDirection() * Mathf.Abs(_currentPower) / 40;
-				_collider.sharedMaterial = _bouncy;
-
-				_onHit = 2;
-				_isCharging = false;
-			}
-
-			if (_onHit == 1)
-			{
-				_rigid.angularDamping = 0.1f;
-				_rigid.linearDamping = 2.5f;
-				_rigid.gravityScale = 0.5f;
-			}
-
-			else
-			{
-				_rigid.angularDamping = 0.2f;
-				_rigid.linearDamping = 0.2f;
-				_rigid.gravityScale = 9.8f;
-			}
-
-			if (_onHit != 2)
-				_collider.sharedMaterial = _normal;
-		}
-
-
-
-		// Running
-
-		void Caring()
-		{
-
-			if (_physicManager._onAir && (_onHit != 1))
-			{
-				_rigid.gravityScale = 9.8f;
-			}
-
-			if (!_physicManager._onAir)
-			{
-				_rigid.gravityScale = 4.9f;
 			}
 		}
 
@@ -410,6 +357,8 @@ namespace BS.Player
 					}
 					_attackSuccess = false;
 					_isCharging = false;
+					_collider.sharedMaterial = _normal;
+					_currentPower = 0;
 					break;
 			}
 		}
@@ -463,19 +412,9 @@ namespace BS.Player
 		{
 			if (!_isDead && IsControllable)
 			{
-				InputAttack();
 				InputMove();
 			}
-			else
-			{
-				_onHit = 0;
-				_rigid.angularDamping = 0.2f;
-				_rigid.linearDamping = 0.2f;
-				_rigid.gravityScale = 9.8f;
-				_collider.sharedMaterial = _normal;
-			}
 
-			Caring();
 			if (_animController != null)
 			{
 				_animController.Render();

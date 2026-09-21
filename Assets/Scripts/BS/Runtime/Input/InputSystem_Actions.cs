@@ -113,6 +113,16 @@ namespace BS.Runtime.Input
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Charge"",
+                    ""type"": ""Button"",
+                    ""id"": ""272e49ca-b618-4363-b22d-a5ee03c71b49"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -278,6 +288,17 @@ namespace BS.Runtime.Input
                     ""processors"": """",
                     ""groups"": ""XR"",
                     ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8e315a25-9d7b-4dda-b7ab-ab826049e453"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Charge"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -877,6 +898,7 @@ namespace BS.Runtime.Input
             m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
             m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
             m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
+            m_Player_Charge = m_Player.FindAction("Charge", throwIfNotFound: true);
             // UI
             m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
             m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -972,6 +994,7 @@ namespace BS.Runtime.Input
         private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
         private readonly InputAction m_Player_Move;
         private readonly InputAction m_Player_Jump;
+        private readonly InputAction m_Player_Charge;
         /// <summary>
         /// Provides access to input actions defined in input action map "Player".
         /// </summary>
@@ -991,6 +1014,10 @@ namespace BS.Runtime.Input
             /// Provides access to the underlying input action "Player/Jump".
             /// </summary>
             public InputAction @Jump => m_Wrapper.m_Player_Jump;
+            /// <summary>
+            /// Provides access to the underlying input action "Player/Charge".
+            /// </summary>
+            public InputAction @Charge => m_Wrapper.m_Player_Charge;
             /// <summary>
             /// Provides access to the underlying input action map instance.
             /// </summary>
@@ -1023,6 +1050,9 @@ namespace BS.Runtime.Input
                 @Jump.started += instance.OnJump;
                 @Jump.performed += instance.OnJump;
                 @Jump.canceled += instance.OnJump;
+                @Charge.started += instance.OnCharge;
+                @Charge.performed += instance.OnCharge;
+                @Charge.canceled += instance.OnCharge;
             }
 
             /// <summary>
@@ -1040,6 +1070,9 @@ namespace BS.Runtime.Input
                 @Jump.started -= instance.OnJump;
                 @Jump.performed -= instance.OnJump;
                 @Jump.canceled -= instance.OnJump;
+                @Charge.started -= instance.OnCharge;
+                @Charge.performed -= instance.OnCharge;
+                @Charge.canceled -= instance.OnCharge;
             }
 
             /// <summary>
@@ -1354,6 +1387,13 @@ namespace BS.Runtime.Input
             /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
             /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
             void OnJump(InputAction.CallbackContext context);
+            /// <summary>
+            /// Method invoked when associated input action "Charge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+            /// </summary>
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+            /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+            void OnCharge(InputAction.CallbackContext context);
         }
         /// <summary>
         /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
