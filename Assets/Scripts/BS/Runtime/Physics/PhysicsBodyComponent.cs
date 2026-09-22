@@ -13,14 +13,11 @@ namespace BS.Physics
         [SerializeField] PhysicsShapeDefinition _shapeDef;
         [SerializeField] List<Vector2> _shapePoints;
 
-        [Inject] PhysicsWorldService _physicsWorldService;
-
-        void Start()
+        [Inject]
+        void Initialize(PhysicsWorldService physicsWorldService)
         {
-            var shapeDef = PhysicsShapeDefinition.defaultDefinition;
-            var body = _physicsWorldService.World.CreateBody();
-
-            body.CreateShapeBatch(PolygonGeometry.CreatePolygons(_shapePoints.ToArray(), new PhysicsTransform(this.transform.position, PhysicsRotate.identity)), shapeDef);
+            var body = physicsWorldService.World.CreateBody();
+            body.CreateShapeBatch(PolygonGeometry.CreatePolygons(_shapePoints.ToArray(), new PhysicsTransform(this.transform.position, PhysicsRotate.identity)), _shapeDef);
         }
 
 #if UNITY_EDITOR

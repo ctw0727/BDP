@@ -1,14 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using BS.Manager;
 using BS.Player;
 using BS.UI;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace BS.Intro.Manager
 {
-    public class IntroController : BaseManager<IntroController>
+    public class IntroController : MonoBehaviour
     {
         public PlayerController _player;
         public StartMenuManager _startMenu;

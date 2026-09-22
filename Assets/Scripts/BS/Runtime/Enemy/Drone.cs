@@ -3,13 +3,17 @@ using BS.Projectile;
 using BS.Utils;
 using UnityEngine;
 
-namespace BS.Enemy{
+namespace BS.Enemy
+{
 
-    public class Drone : MonoBehaviour{
+    public class Drone : MonoBehaviour
+    {
         public GameObject _bulletPrefab;
 
-        private void Awake(){
-            for(int i = 0; i < 100; i++){
+        private void Awake()
+        {
+            for (int i = 0; i < 100; i++)
+            {
                 var gameObj = Instantiate(_bulletPrefab);
                 Bullet bullet = gameObj.GetComponent<Bullet>();
                 bullet.transform.SetParent(this.transform);
@@ -17,15 +21,19 @@ namespace BS.Enemy{
             }
         }
 
-        private void Update(){
-            if(Input.GetMouseButton(0)){
-                var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        private void Update()
+        {
+            if (Input.GetMouseButton(0))
+            {
+                var mousePos = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 Vector2 dir = new Vector2(mousePos.x, mousePos.y);
 
-                for(int i = 0; i < 100; i++){
-                    Bullet bullet = ObjectPool.Instance.Dequeue();
+                for (int i = 0; i < 100; i++)
+                {
+                    Bullet bullet = Instantiate(_bulletPrefab, this.transform.position, this.transform.rotation).GetComponent<Bullet>();
 
-                    if(bullet == null){
+                    if (bullet == null)
+                    {
                         var gameObj = Instantiate(_bulletPrefab, this.transform.position, this.transform.rotation);
                         bullet = gameObj.GetComponent<Bullet>();
                     }

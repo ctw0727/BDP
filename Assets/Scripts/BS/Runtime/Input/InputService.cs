@@ -23,12 +23,12 @@ namespace BS.Runtime.Input
         Subject<Unit> _onPlayerJumpSubject;
 
         CancellationTokenSource _chargeCts;
-        Camera _mainCamera;
+        UnityEngine.Camera _mainCamera;
 
         [Inject]
         void Initialize()
         {
-            _mainCamera = Camera.main;
+            _mainCamera = UnityEngine.Camera.main;
 
             _onPlayerMoveSubject = new Subject<Vector2>();
             _onPlayerChargeSubject = new Subject<Vector2>();

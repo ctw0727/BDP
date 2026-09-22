@@ -1,3 +1,4 @@
+using BS.Camera;
 using BS.Physics;
 using BS.Runtime.Input;
 using Reflex.Core;
@@ -17,7 +18,8 @@ namespace BS.Installers
                 .RegisterType(typeof(PhysicsWorldService),
                     Lifetime.Singleton, Reflex.Enums.Resolution.Eager)
                 .RegisterValue(_physicsCoreSettings)
-                .RegisterType(typeof(InputService), Lifetime.Singleton, Reflex.Enums.Resolution.Eager);
+                .RegisterType(typeof(InputService), Lifetime.Singleton, Reflex.Enums.Resolution.Eager)
+                .RegisterType(typeof(CameraService), Lifetime.Singleton, Reflex.Enums.Resolution.Eager);
         }
     }
 }

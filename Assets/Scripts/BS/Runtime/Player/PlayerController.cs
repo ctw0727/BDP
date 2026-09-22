@@ -1,13 +1,12 @@
 ﻿using System.Collections;
+using BS.Camera;
 using BS.Enemy.Boss;
-using BS.Manager.Cameras;
 using BS.Runtime.Extensions;
 using BS.Runtime.Input;
 using R3;
 using Reflex.Core;
 using Reflex.Extensions;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace BS.Player
 {
@@ -31,7 +30,7 @@ namespace BS.Player
 		public PhysicsMaterial2D _normal;
 		public PhysicsMaterial2D _bouncy;
 
-		Camera _mainCamera;
+		UnityEngine.Camera _mainCamera;
 
 		public float _moveDirection;
 		public bool _down = false;
@@ -100,13 +99,15 @@ namespace BS.Player
 				Debug.LogError("effector가 할당되어 있지 않습니다.");
 			}
 
-			_mainCamera = Camera.main;
+			_mainCamera = UnityEngine.Camera.main;
 		}
 
 		void Start()
 		{
 			SubscribeInputEvents();
 		}
+
+		CameraService _cameraService;
 
 		void SubscribeInputEvents()
 		{
@@ -127,6 +128,11 @@ namespace BS.Player
 					.AddTo(this);
 
 				inputService.SetPlayerInputEnable(true);
+			}
+
+			if (sceneContainer.TryResolve<CameraService>(out var cameraService))
+			{
+				_cameraService = cameraService;
 			}
 		}
 
@@ -288,14 +294,14 @@ namespace BS.Player
 				{
 					StartCoroutine(Invicible(1.0f));
 				}
-				CameraManager.Instance.ShakeCamera(0.5f, 0.05f);
+				_cameraService.ShakeCamera(0.5f, 0.05f);
 			}
 			else if (_health == 1)
 			{
 				_health = 0;
 				_isDead = true;
 				_animController.Dead();
-				CameraManager.Instance.ShakeCamera(1f, 0.1f);
+				_cameraService.ShakeCamera(1f, 0.1f);
 			}
 		}
 

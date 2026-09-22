@@ -92,7 +92,7 @@ namespace BS.Projectile
 		{
 			if (_isLiveInView && _isEnabled)
 			{
-				Vector3 objScreenPos = Camera.main.WorldToScreenPoint(this.transform.position);
+				Vector3 objScreenPos = UnityEngine.Camera.main.WorldToScreenPoint(this.transform.position);
 				if (objScreenPos.x < 0 || objScreenPos.x > Screen.width || objScreenPos.y < 0 || objScreenPos.y > Screen.height)
 				{
 					Disable();
@@ -133,7 +133,6 @@ namespace BS.Projectile
 		{
 			_isEnabled = false;
 			this.gameObject.SetActive(false);
-			ObjectPool.Instance.Enqueue(this);
 		}
 
 		public void Enable()
