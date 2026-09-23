@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace BS.Anim
@@ -54,7 +54,25 @@ namespace BS.Anim
             yield return null;
         }
 
-        
+        protected virtual IEnumerator AlphaBlink(float t, float freq, Action<float> setAlpha)
+        {
+            float duration = t;
+            isBlink = true;
+            while (duration > 0)
+            {
+                float x = t - duration;
+                float alpha = Mathf.Abs(Mathf.Cos((Mathf.PI / freq) * x));
+                setAlpha(alpha);
+
+                duration -= Time.deltaTime;
+                yield return null;
+            }
+
+            isBlink = false;
+            setAlpha(1f);
+            yield return null;
+        }
+
         /// <summary>
         /// sprite의 alpha를 set합니다.
         /// </summary>

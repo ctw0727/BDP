@@ -1,28 +1,33 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using BS.Utils;
-using UnityEngine.Events;
 using UnityEngine;
+using UnityEngine.Events;
 
 
-namespace BS.UI{    
+namespace BS.UI
+{
+
     public class StartMenuManager : MonoBehaviour
     {
         [HideInInspector]
         public UnityEvent OnPlay;
         private CanvasGroup _canvas;
 
-        public void Init(){
+        public void Init()
+        {
             _canvas = GetComponent<CanvasGroup>();
             OnPlay = new UnityEvent();
         }
 
-        public IEnumerator FadeOutStartMenuLoop(float t){
+        public IEnumerator FadeOutStartMenuLoop(float t)
+        {
             float duration = t;
 
             _canvas.blocksRaycasts = false;
             _canvas.interactable = false;
-            while(duration > 0){
+            while (duration > 0)
+            {
                 duration -= Time.deltaTime;
                 _canvas.alpha = (duration / t);
                 yield return null;
@@ -33,28 +38,35 @@ namespace BS.UI{
             yield return null;
         }
 
-        public void OnOff(bool signal){
+        public void OnOff(bool signal)
+        {
             _canvas.blocksRaycasts = signal;
             _canvas.interactable = signal;
             this.gameObject.SetActive(signal);
         }
 
-        public void Play(){
+        public void Play()
+        {
             Debug.Log("게임 시작");
-            if(OnPlay != null){
+            if (OnPlay != null)
+            {
                 OnPlay.Invoke();
             }
         }
 
-        public void Settings(){
+        public void Settings()
+        {
             Debug.Log("설정 보기");
         }
 
-        public void Exit(){
-            AppHelper.Quit();
+        public void Exit()
+        {
+
+
         }
 
-        private void OnDestroy(){
+        private void OnDestroy()
+        {
             OnPlay.RemoveAllListeners();
         }
     }

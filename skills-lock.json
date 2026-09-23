@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skills": {
+    "localization": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/localization/SKILL.md",
+      "computedHash": "7a4c4a94c7ef859a96b322b261b7e406467ebd7f23f5e3bfb190c240a7948f3a"
+    },
+    "manage-sprite-atlas": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/manage-sprite-atlas/SKILL.md",
+      "computedHash": "394026d920aaf59e0797803c16bfbbd2a166e4b278b97b69f1b3b899d283ed0e"
+    },
+    "migrate-birp-to-urp": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/migrate-birp-to-urp/SKILL.md",
+      "computedHash": "6fb1403e69b0f5bf914e69d9ca77ba4243065249276a0928135e6b0d1e960a11"
+    },
+    "shader-graph-create-custom-node": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/shader-graph-create-custom-node/SKILL.md",
+      "computedHash": "b32a392ff7c9d1fd3aaf199f8cd36d8ccab7b5915c33decf280f3a853238494f"
+    },
+    "sprite-editor": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/sprite-editor/SKILL.md",
+      "computedHash": "e8ee691cd851d04bf0271f052f34ee25444517d6c214cce707d76798f7f1f641"
+    },
+    "ui-ugui": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ugui/SKILL.md",
+      "computedHash": "85deedad645abc7f6d36547ccf93dd4ae58a94ec8a4407c8079a5942256f4480"
+    },
+    "unity-cli": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/unity-cli/SKILL.md",
+      "computedHash": "e12457b6fc2d2fd42a39f22e2528c82a32dd807f3410c4f4a9515f1293452673"
+    },
+    "urp-postprocessing": {
+      "source": "Unity-Technologies/skills",
+      "sourceType": "github",
+      "skillPath": "skills/urp-postprocessing/SKILL.md",
+      "computedHash": "a1cfadaf5f74ad99a375e18501fe281315917713ee1b669b7f179b72a7b91ff7"
+    }
+  }
+}

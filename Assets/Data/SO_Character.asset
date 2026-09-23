@@ -1,0 +1,349 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 094c124cc560ab84b808e55e54eebef2, type: 3}
+  m_Name: SO_Character
+  m_EditorClassIdentifier: BS.Runtime::BS.SO.CharacterSO
+  characterId: BDP
+  animations:
+    _saintsKeys:
+    - value: BodyIdle
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: BodyNoise
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: BodyError
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: BodyCharge
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: BodyOff
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: FaceIdle
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: FaceFalling
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: FaceCharge
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: FaceSuccess
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value: FaceOnHit
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    _wrapTypeKey: 4
+    _saintsValues:
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: 716616f750c69444c912159618798b7c, type: 3}
+        _duration: 1
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: 012c4bbec01a6de489a0458aea3ce8b0, type: 3}
+        - {fileID: 21300000, guid: 8861d956457ce7b49b97977e16c03890, type: 3}
+        _duration: 0.2
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: 70c3769475fb64c4da25315c1a5c2f6b, type: 3}
+        - {fileID: 21300000, guid: 110c377daa58a6a4da53023a9f27039d, type: 3}
+        - {fileID: 21300000, guid: 80ac773e2c6f32d4fb3fef136be5c936, type: 3}
+        _duration: 0.33333334
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 7546913264817621851, guid: 088ad9a58d36fb24b823d735809ff296, type: 3}
+        - {fileID: 5088050216535829101, guid: 088ad9a58d36fb24b823d735809ff296, type: 3}
+        - {fileID: -826046134879540806, guid: 088ad9a58d36fb24b823d735809ff296, type: 3}
+        - {fileID: -7231228378244716958, guid: 088ad9a58d36fb24b823d735809ff296, type: 3}
+        - {fileID: 8399083022414252474, guid: 088ad9a58d36fb24b823d735809ff296, type: 3}
+        _duration: 0.083333336
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: 086a6a17c57ef754ebfb653c422c84a2, type: 3}
+        _duration: 0.016666668
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: 6ae6b004375497b4f8b2e98b683a7851, type: 3}
+        _duration: 0.016666668
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: bfb67af6688cd4d4ca9f05b20aafdb39, type: 3}
+        _duration: 1
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: 12b2d96515a722549af867597cb047a2, type: 3}
+        - {fileID: 21300000, guid: 15fd878d312b2d14691b39fab2505a74, type: 3}
+        - {fileID: 21300000, guid: 62c01f096d1e5aa49b636932065e2620, type: 3}
+        - {fileID: 21300000, guid: 53b1ff8ff17de1e498c7828f10752122, type: 3}
+        _duration: 0.25
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: c22e1ccec2f003b4c95e962f228bc990, type: 3}
+        - {fileID: 21300000, guid: ee7ac9b3351c93f42a638cee47852f29, type: 3}
+        _duration: 0.5
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    - value:
+        _sprites:
+        - {fileID: 21300000, guid: c99d80ba4d68b6a419a1f70fb01d77f3, type: 3}
+        _duration: 0.33333334
+      valueField:
+        propertyType: 0
+        longValue: 0
+        uLongValue: 0
+        stringValue: 
+        intValues: 
+        V: {fileID: 0}
+        VRef:
+          rid: -2
+        IsVRef: 0
+      valueArray: []
+      valueList: []
+      wrapType: 4
+    _wrapTypeValue: 4
+    saintsSerializedVersion: 2
+    _keys: []
+    _values: []
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

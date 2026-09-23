@@ -23,14 +23,10 @@ namespace BS.Player
 		public float _maxPower = 2000; /// 최대 차지 파워
 		public float _currentPower = 0; /// 현재 차지 파워
 
-		public Animator _bodyAnimator;
-		public Animator _faceAnimator;
 		protected BulletEraser _eraser;
 
 		public PhysicsMaterial2D _normal;
 		public PhysicsMaterial2D _bouncy;
-
-		UnityEngine.Camera _mainCamera;
 
 		public float _moveDirection;
 		public bool _down = false;
@@ -81,7 +77,7 @@ namespace BS.Player
 
 			// Init animation controller
 			_animController = GetComponent<PlayerAnimController>() ?? this.transform.gameObject.AddComponent<PlayerAnimController>();
-			_animController.Init(this, _bodyAnimator, _faceAnimator);
+			_animController.Init(this);
 
 			// Init Physic Manager
 			_physicManager = GetComponent<PlayerPhysicController>() ?? this.transform.gameObject.AddComponent<PlayerPhysicController>();
@@ -98,8 +94,6 @@ namespace BS.Player
 			{
 				Debug.LogError("effector가 할당되어 있지 않습니다.");
 			}
-
-			_mainCamera = UnityEngine.Camera.main;
 		}
 
 		void Start()

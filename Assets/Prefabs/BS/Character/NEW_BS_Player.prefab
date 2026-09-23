@@ -379,8 +379,6 @@ MonoBehaviour:
   _eraserPrefab: {fileID: 5509540706980799759, guid: 406a48824a2a9894899a23703c658f90, type: 3}
   _maxPower: 2000
   _currentPower: 0
-  _bodyAnimator: {fileID: 5762887641646660150}
-  _faceAnimator: {fileID: 7335033103268225992}
   _normal: {fileID: 0}
   _bouncy: {fileID: 0}
   _moveDirection: 0
@@ -424,6 +422,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78903e01b046baa45895b1f8bab38f45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _character: {fileID: 11400000, guid: 34f0acea575776b4687c9126b9ca037c, type: 2}
+  _material: {fileID: 2100000, guid: 7cadaa7385a8e5f42b0a68ab2747d8ef, type: 2}
+  _bodyTransform: {fileID: 0}
+  _faceTransform: {fileID: 0}
 --- !u!1 &628286941435717084
 GameObject:
   m_ObjectHideFlags: 0

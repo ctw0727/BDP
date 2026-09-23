@@ -1,193 +1,219 @@
 ﻿using BS.Anim;
+using BS.Animators;
 using BS.Camera;
+using BS.SO;
 using Reflex.Attributes;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 namespace BS.Player
 {
     public class PlayerAnimController : BaseAnimController
     {
-        // 임시로 public으로 지정
-        // Init 함수로 초기화 하는 게 좋을 지도 모름
+        const string Idle = "Idle";
+        const string Charging = "Charging";
+        const string OnHitId = "OnHit";
+        const string BlackNoise = "BlackNoise";
+        const string OffId = "Off";
+        const string AttackSuccessId = "AttackSuccess";
+        const string Falling = "Falling";
 
-        /// Animators
+        [SerializeField] CharacterSO _character;
+        [SerializeField] Material _material;
+
         protected PlayerController _player;
-        protected Animator _bodyAnimator;
-        protected Animator _faceAnimator;
+        BS.Animators.Animator _bodyAnimator;
+        BS.Animators.Animator _faceAnimator;
 
-        /// Sprite renders
-        protected SpriteRenderer _bodySprite;
-        protected SpriteRenderer _faceSprite;
-
+        Color _bodyColor = Color.white;
+        Color _faceColor = Color.white;
+        bool _isFaceFalling;
         int prevLeftRightDirection = 1;
 
         [Inject] CameraService _cameraService;
 
-        /// <summary>
-        /// Base AnimController 초기화
-        /// </summary>
         public override void Init() { }
 
-        /// <summary>
-        /// 플레이어 Animation Controller 초기화
-        /// </summary>
-        /// <param name="player"> Player Controller 객체</param>
-        /// <param name="bodyAnimator"> body animator</param>
-        /// <param name="faceAnimator"> face animator</param>
-        public void Init(PlayerController player, Animator bodyAnimator, Animator faceAnimator)
+        public void Init(PlayerController player)
         {
+            if (_material == null)
+            {
+                throw new System.Exception("Material is null");
+            }
+
             _player = player;
-            _bodyAnimator = bodyAnimator;
-            _bodySprite = _bodyAnimator.GetComponent<SpriteRenderer>();
-            _faceAnimator = faceAnimator;
-            _faceSprite = _faceAnimator.GetComponent<SpriteRenderer>();
+            BuildAnimators();
         }
 
-
-        /// <summary>
-        /// 플레이어의 sprite alpha를 깜빡거리게 표현합니다.
-        /// 삼각함수의 형태로 alpha가 변합니다.
-        /// (freq에 0을 할당하지 마세요)
-        /// </summary>
-        /// <param name="t"> blink 지속 시간</param>
-        /// <param name="freq"> alpha가 1이 되는 blink 주기</param>
         public void SpriteAlphaBlink(float t, float freq)
         {
-            StartCoroutine(SpriteAlphaBlinkLoop(_bodySprite, t, freq));
-            StartCoroutine(SpriteAlphaBlinkLoop(_faceSprite, t, freq));
+            StartCoroutine(AlphaBlink(t, freq, SetAlpha));
         }
 
-        /// <summary>
-        /// 4 frame 애니메이션으로
-        /// 0.75 부터 마지막 프레임이기 때문에
-        /// player의 power가 애니메이션의 진행도가 됨
-        /// </summary>
-        protected void ChargingAnim()
-        {
-
-            if (_player._isCharging)
-            {
-                float progress = (Mathf.Abs(_player._currentPower) / _player._maxPower) * 0.75f;
-
-                if (progress > 0.75f)
-                {
-                    progress = 1f;
-                }
-
-                _bodyAnimator.SetFloat("Charging", progress);
-                _faceAnimator.SetFloat("Charging", progress);
-            }
-            else
-            {
-                _bodyAnimator.SetFloat("Charging", 0);
-                _faceAnimator.SetFloat("Charging", 0);
-            }
-        }
-
-        /// <summary>
-        /// Player 공격 성공시 애니메이션 재생
-        /// </summary>
         public void AttackSuccess()
         {
-            _faceAnimator.SetTrigger("AttackSuccess");
+            _faceAnimator?.SetTrigger(AttackSuccessId);
         }
 
-        /// <summary>
-        /// Player가 공격을 받아 무적 상태에 진입
-        /// </summary>
         public void OnHit()
         {
             if (_player._isInvincible && !isBlink)
             {
                 SpriteAlphaBlink(0.9f, 0.03f);
-
-                _bodyAnimator.SetTrigger("OnHit");
+                _bodyAnimator?.SetTrigger(OnHitId);
                 if (!_player._isCharging)
-                {
-                    _faceAnimator.SetTrigger("OnHit");
-                }
+                    _faceAnimator?.SetTrigger(OnHitId);
             }
         }
 
-        /// <summary>
-        /// Player 사망시 애니메이션 재생
-        /// </summary>
         public void Dead()
         {
             if (_player._isDead)
-            {
-                SetSpriteAlpha(_bodySprite, 0.35f);
-                SetSpriteAlpha(_faceSprite, 0.35f);
-            }
+                SetAlpha(0.35f);
         }
 
         public void Off()
         {
-            _bodyAnimator.SetTrigger("BlackNoise");
-            _faceSprite.gameObject.SetActive(false);
+            _bodyAnimator?.SetTrigger(BlackNoise);
         }
 
         public void On()
         {
-            _bodyAnimator.SetTrigger("Idle");
-            _faceSprite.gameObject.SetActive(true);
-        }
-
-        /// <summary>
-        /// 이동 방향에 따라 Player sprite를 좌우로 뒤집습니다.
-        /// Player의 z rotation이 180이라면 상하로 뒤집습니다.
-        /// </summary>
-        protected void FlipSprite()
-        {
-            float rotationZ = Mathf.Abs(_player.transform.rotation.eulerAngles.z);
-
-
-            int directionUpDown = 1;
-            // Player가 Charging 중...
-            if (_player._isCharging)
-            {
-                if ((90 < rotationZ) && (rotationZ < 270))
-                {
-                    directionUpDown = -1;
-                }
-            }
-            else if ((170 < rotationZ) && (rotationZ < 190))
-            {
-                directionUpDown = -1;
-            }
-
-
-            int directionLeftRight = prevLeftRightDirection;
-            // Player가 Charging 중...
-            if (_player._isCharging)
-            {
-                Vector2 pos = this.transform.position;
-                Vector2 mouseOnWorld = _cameraService.MainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-
-                directionLeftRight = (mouseOnWorld - pos).x <= 0 ? -1 : 1;
-                prevLeftRightDirection = directionLeftRight;
-            }
-            else if (Mathf.Abs(_player._moveDirection) > 0)
-            {
-                directionLeftRight = (int)(_player._moveDirection / Mathf.Abs(_player._moveDirection));
-                prevLeftRightDirection = directionLeftRight;
-            }
-
-            Vector3 scale = new Vector3(1 * directionLeftRight * directionUpDown, 1 * directionUpDown, 1);
-
-            _faceSprite.transform.localScale = scale;
-            _bodySprite.transform.localScale = scale;
+            _bodyAnimator?.SetTrigger(Idle);
         }
 
         public override void Render()
         {
-            ChargingAnim();
+            if (_bodyAnimator == null || _faceAnimator == null)
+                return;
 
-            // Player가 Charging 중이 아니면 Falling Animation
-            _faceAnimator.SetBool("Falling", _player.IsFalling() && !_player._isCharging && !_player._attackSuccess);
+            _isFaceFalling = _player.IsFalling() && !_player._isCharging && !_player._attackSuccess;
+            float dt = Time.deltaTime;
+            _bodyAnimator.Update(dt);
+            _faceAnimator.Update(dt);
+
+            if (_player._isCharging)
+            {
+                float progress = ChargeProgress();
+                if (_bodyAnimator.Current?.Id == Charging)
+                    _bodyAnimator.SetNormalizedTime(progress);
+                if (_faceAnimator.Current?.Id == Charging)
+                    _faceAnimator.SetNormalizedTime(progress);
+            }
 
             FlipSprite();
+        }
+
+        void BuildAnimators()
+        {
+            SheetAnimationClip bodyIdleClip = Clip(CharacterSO.BodyIdle);
+            SheetAnimationClip bodyNoiseClip = Clip(CharacterSO.BodyNoise);
+            SheetAnimationClip bodyErrorClip = Clip(CharacterSO.BodyError);
+            SheetAnimationClip bodyChargeClip = Clip(CharacterSO.BodyCharge);
+            SheetAnimationClip bodyOffClip = Clip(CharacterSO.BodyOff);
+
+            AnimState bodyIdle = new AnimState(Idle, bodyIdleClip, true);
+            AnimState bodyNoise = new AnimState(BlackNoise, bodyNoiseClip, true);
+            AnimState bodyError = new AnimState(OnHitId, bodyErrorClip, false, bodyIdle);
+            AnimState bodyCharge = new AnimState(Charging, bodyChargeClip, true);
+            AnimState bodyOff = new AnimState(OffId, bodyOffClip, true);
+            bodyCharge.AddBranch(Idle, bodyIdle, () => !_player._isCharging);
+
+            _bodyAnimator = new BS.Animators.Animator(bodyIdle);
+            _bodyAnimator.RenderController.SetRender(CreateRenderParams(0)).SetColor(_bodyColor);
+            _bodyAnimator.AddAnyState(OnHitId, bodyError);
+            _bodyAnimator.AddAnyState(BlackNoise, bodyNoise);
+            _bodyAnimator.AddAnyState(OffId, bodyOff);
+            _bodyAnimator.AddAnyState(Idle, bodyIdle);
+            _bodyAnimator.AddAnyState(Charging, bodyCharge, () => _player._isCharging);
+
+            SheetAnimationClip faceIdleClip = Clip(CharacterSO.FaceIdle);
+            SheetAnimationClip faceFallingClip = Clip(CharacterSO.FaceFalling);
+            SheetAnimationClip faceChargeClip = Clip(CharacterSO.FaceCharge);
+            SheetAnimationClip faceSuccessClip = Clip(CharacterSO.FaceSuccess);
+            SheetAnimationClip faceOnHitClip = Clip(CharacterSO.FaceOnHit);
+
+            AnimState faceIdle = new AnimState(Idle, faceIdleClip, true);
+            AnimState faceFalling = new AnimState(Falling, faceFallingClip, true);
+            AnimState faceCharge = new AnimState(Charging, faceChargeClip, true);
+            AnimState faceSuccess = new AnimState(AttackSuccessId, faceSuccessClip, false, faceIdle);
+            AnimState faceOnHit = new AnimState(OnHitId, faceOnHitClip, false, faceIdle);
+            faceFalling.AddBranch(Idle, faceIdle, () => !_isFaceFalling);
+            faceCharge.AddBranch(Idle, faceIdle, () => !_player._isCharging);
+
+            _faceAnimator = new BS.Animators.Animator(faceIdle);
+            _faceAnimator.RenderController.SetRender(CreateRenderParams(1)).SetColor(_faceColor);
+            _faceAnimator.AddAnyState(AttackSuccessId, faceSuccess);
+            _faceAnimator.AddAnyState(OnHitId, faceOnHit);
+            _faceAnimator.AddAnyState(Falling, faceFalling, () => _isFaceFalling);
+            _faceAnimator.AddAnyState(Charging, faceCharge, () => _player._isCharging);
+        }
+
+        SheetAnimationClip Clip(string id)
+        {
+            SheetAnimationClip clip = _character != null ? _character.GetClip(id) : null;
+            if (clip == null)
+                Debug.LogError($"CharacterSO에 {id} 클립이 없습니다.", this);
+
+            return clip;
+        }
+
+        RenderParams CreateRenderParams(int sortingOrder)
+        {
+            return new RenderParams(_material)
+            {
+                sortingOrder = sortingOrder,
+                layer = gameObject.layer,
+                renderingLayerMask = 1u,
+                shadowCastingMode = ShadowCastingMode.Off,
+                receiveShadows = false
+            };
+        }
+
+        float ChargeProgress()
+        {
+            if (_player._maxPower <= 0f)
+                return 0f;
+
+            float progress = (Mathf.Abs(_player._currentPower) / _player._maxPower) * 0.75f;
+            return progress > 0.75f ? 1f : progress;
+        }
+
+        void SetAlpha(float alpha)
+        {
+            _bodyColor.a = alpha;
+            _faceColor.a = alpha;
+        }
+
+        void FlipSprite()
+        {
+            float rotationZ = Mathf.Abs(_player.transform.rotation.eulerAngles.z);
+
+            int directionUpDown = 1;
+            if (_player._isCharging)
+            {
+                if (90f < rotationZ && rotationZ < 270f)
+                    directionUpDown = -1;
+            }
+            else if (170f < rotationZ && rotationZ < 190f)
+            {
+                directionUpDown = -1;
+            }
+
+            int directionLeftRight = prevLeftRightDirection;
+            if (_player._isCharging)
+            {
+                Vector2 pos = transform.position;
+                Vector2 mouseOnWorld = _cameraService.MainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+                directionLeftRight = (mouseOnWorld - pos).x <= 0f ? -1 : 1;
+                prevLeftRightDirection = directionLeftRight;
+            }
+            else if (Mathf.Abs(_player._moveDirection) > 0f)
+            {
+                directionLeftRight = (int)(_player._moveDirection / Mathf.Abs(_player._moveDirection));
+                prevLeftRightDirection = directionLeftRight;
+            }
         }
     }
 }

@@ -6979,7 +6979,6 @@ Transform:
   - {fileID: 1076819618}
   - {fileID: 324922043}
   - {fileID: 1130111510}
-  - {fileID: 1670216327}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!60 &1398139050
@@ -9317,31 +9316,15 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1398139049}
+    m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 628286940262280440, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 628286941257426547, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
       propertyPath: m_Name
       value: BS_Player
       objectReference: {fileID: 0}
-    - target: {fileID: 628286941257426550, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
-      propertyPath: _eraser
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 628286941257426550, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
-      propertyPath: _eraserPrefab
-      value: 
-      objectReference: {fileID: 5509540706980799759, guid: 406a48824a2a9894899a23703c658f90, type: 3}
-    - target: {fileID: 628286941257426824, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
-      propertyPath: m_RootOrder
-      value: 7
-      objectReference: {fileID: 0}
     - target: {fileID: 628286941257426824, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -19.23
+      value: -7.2299995
       objectReference: {fileID: 0}
     - target: {fileID: 628286941257426824, guid: c8230e95e35f94b408dc09ee88ebfb6e, type: 3}
       propertyPath: m_LocalPosition.y
@@ -9826,6 +9809,7 @@ SceneRoots:
   - {fileID: 896002016}
   - {fileID: 1196249043}
   - {fileID: 303889108}
+  - {fileID: 1773593407}
   - {fileID: 1398139049}
   - {fileID: 2084977531}
   - {fileID: 249342669}
