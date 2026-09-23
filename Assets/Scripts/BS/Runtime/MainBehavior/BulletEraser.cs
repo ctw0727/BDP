@@ -5,6 +5,11 @@ using UnityEngine;
 
 public class BulletEraser : MonoBehaviour
 {
+    /// <summary>
+    /// Renderer2D의 Camera Sorting Layer Texture 캡처 범위(Default)보다 뒤에 있어야 배경 왜곡이 보입니다.
+    /// </summary>
+    const string DistortionSortingLayer = "Distortion";
+
     public GameObject _followingObj;
 
     readonly RenderController _render = new RenderController();
@@ -27,8 +32,7 @@ public class BulletEraser : MonoBehaviour
         {
             _sprite = renderer.sprite;
             _color = renderer.color;
-            if (CanRenderWithGraphics(renderer.sharedMaterial))
-                _material = renderer.sharedMaterial;
+            _material = renderer.sharedMaterial;
             renderer.enabled = false;
         }
 
@@ -36,6 +40,7 @@ public class BulletEraser : MonoBehaviour
         {
             _render.SetRender(new RenderParams(_material)
             {
+                sortingLayerID = SortingLayer.NameToID(DistortionSortingLayer),
                 sortingOrder = 3,
                 renderingLayerMask = 1u
             });
@@ -83,15 +88,6 @@ public class BulletEraser : MonoBehaviour
     Vector2 FollowPosition()
     {
         return _followingObj != null ? (Vector2)_followingObj.transform.position : (Vector2)transform.position;
-    }
-
-    static bool CanRenderWithGraphics(Material material)
-    {
-        if (material == null || material.shader == null)
-            return false;
-
-        string shaderName = material.shader.name;
-        return shaderName != "Effects/WaveEffect" && !shaderName.Contains("GrabPass");
     }
 
     void Draw(Vector2 position, float radius)

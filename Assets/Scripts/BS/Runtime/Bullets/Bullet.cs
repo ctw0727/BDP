@@ -16,8 +16,8 @@ namespace BS.Projectile
         [SerializeField] Sprite _sprite;
         [SerializeField] Material _material;
         [SerializeField] float _radius = 0.2f;
-        [SerializeField] PhysicsMask _category;
-        [SerializeField] PhysicsMask _contact;
+        [SerializeField] PhysicsMask _category = 1UL << 10;
+        [SerializeField] PhysicsMask _contact = 1UL << 8;
 
         readonly RenderController _render = new RenderController();
         PhysicsWorld _world;
@@ -138,7 +138,7 @@ namespace BS.Projectile
             if (player == null)
                 return;
 
-            player.OnHit();
+            player.OnBulletHit(Position);
             Disable();
         }
 
@@ -192,7 +192,8 @@ namespace BS.Projectile
                 center = Vector2.zero,
                 radius = Mathf.Max(0.05f, _radius)
             };
-            _body.CreateShape(circle, shapeDef);
+            PhysicsShape shape = _body.CreateShape(circle, shapeDef);
+            shape.callbackTarget = this;
         }
 
         GameObject OtherObject(PhysicsShape shapeA, PhysicsShape shapeB)

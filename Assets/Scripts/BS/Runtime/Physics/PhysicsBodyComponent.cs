@@ -15,6 +15,10 @@ namespace BS.Physics
         [SerializeField] PhysicsShapeDefinition _shapeDef;
         [SerializeField] List<Vector2> _shapePoints;
 
+        PhysicsBody _body;
+
+        public PhysicsBody Body => _body;
+
         [Inject]
         void Initialize(PhysicsWorldService physicsWorldService)
         {
@@ -30,6 +34,13 @@ namespace BS.Physics
                 shapeDef.contactFilter = PhysicsShape.ContactFilter.defaultFilter;
 
             body.CreateShapeBatch(PolygonGeometry.CreatePolygons(_shapePoints.ToArray(), new PhysicsTransform(this.transform.position, PhysicsRotate.identity)), shapeDef);
+            _body = body;
+        }
+
+        void OnDestroy()
+        {
+            if (_body.isValid)
+                _body.Destroy();
         }
 
 #if UNITY_EDITOR
@@ -46,6 +57,11 @@ namespace BS.Physics
 
         void OnValidate()
         {
+            if (_shapePoints != null && _shapePoints.Count > 0)
+            {
+                return;
+            }
+
             SpriteRenderer renderer = GetComponent<SpriteRenderer>();
 
             if (renderer != null && renderer.sprite != null)

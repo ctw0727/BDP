@@ -26,7 +26,7 @@ namespace BS.Enemy.Boss{
         public virtual void Init(){
             OnHit = new UnityEvent();
             _boss = GetComponent<BaseBoss>();
-            _player = FindObjectOfType<PlayerController>();
+            _player = FindAnyObjectByType<PlayerController>();
             _eraser = BulletEraser.Create(_eraserPrefab, this.gameObject);
 
             if(_eraser == null){

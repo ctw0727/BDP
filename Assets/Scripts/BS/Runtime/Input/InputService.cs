@@ -11,16 +11,18 @@ namespace BS.Runtime.Input
 {
     public class InputService : InputSystem_Actions.IPlayerActions, IDisposable
     {
-        public Observable<Vector2> OnPlayerMove => _onPlayerMoveSubject.AsObservable();
-        public Observable<Unit> OnPlayerJump => _onPlayerJumpSubject.AsObservable();
-        public Observable<Vector2> OnPlayerCharge => _onPlayerChargeSubject.AsObservable();
+        public Observable<Vector2> OnPlayerMove => _onPlayerMove.AsObservable();
+        public Observable<Unit> OnPlayerJump => _onPlayerJump.AsObservable();
+        public Observable<Vector2> OnPlayerCharge => _onPlayerCharge.AsObservable();
+        public Observable<Vector2> OnPlayerChargeRelease => _onPlayerChargeRelease.AsObservable();
 
         InputSystem_Actions _inputSystemActions;
         InputSystem_Actions.PlayerActions _playerInputActions;
 
-        Subject<Vector2> _onPlayerMoveSubject;
-        Subject<Vector2> _onPlayerChargeSubject;
-        Subject<Unit> _onPlayerJumpSubject;
+        Subject<Vector2> _onPlayerMove;
+        Subject<Vector2> _onPlayerCharge;
+        Subject<Vector2> _onPlayerChargeRelease;
+        Subject<Unit> _onPlayerJump;
 
         CancellationTokenSource _chargeCts;
         UnityEngine.Camera _mainCamera;
@@ -30,9 +32,10 @@ namespace BS.Runtime.Input
         {
             _mainCamera = UnityEngine.Camera.main;
 
-            _onPlayerMoveSubject = new Subject<Vector2>();
-            _onPlayerChargeSubject = new Subject<Vector2>();
-            _onPlayerJumpSubject = new Subject<Unit>();
+            _onPlayerMove = new Subject<Vector2>();
+            _onPlayerCharge = new Subject<Vector2>();
+            _onPlayerChargeRelease = new Subject<Vector2>();
+            _onPlayerJump = new Subject<Unit>();
 
             _inputSystemActions = new InputSystem_Actions();
             _playerInputActions = _inputSystemActions.Player;
@@ -43,12 +46,12 @@ namespace BS.Runtime.Input
 
         void InputSystem_Actions.IPlayerActions.OnMove(InputAction.CallbackContext context)
         {
-            _onPlayerMoveSubject.OnNext(context.ReadValue<Vector2>());
+            _onPlayerMove.OnNext(context.ReadValue<Vector2>());
         }
 
         void InputSystem_Actions.IPlayerActions.OnJump(InputAction.CallbackContext context)
         {
-            _onPlayerJumpSubject.OnNext(Unit.Default);
+            _onPlayerJump.OnNext(Unit.Default);
         }
 
         void InputSystem_Actions.IPlayerActions.OnCharge(InputAction.CallbackContext context)
@@ -65,6 +68,9 @@ namespace BS.Runtime.Input
 
         async UniTask HoldCharge(InputAction.CallbackContext context, CancellationToken ct)
         {
+            Vector2 mouseWorldPosition = default;
+            Vector3 mouseScreenPosition = default;
+
             while (context.ReadValueAsButton())
             {
                 if (ct.IsCancellationRequested)
@@ -74,11 +80,11 @@ namespace BS.Runtime.Input
 
                 await UniTask.DelayFrame(1, cancellationToken: ct);
 
-                Vector3 mouseScreenPosition = Mouse.current.position.ReadValue();
+                mouseScreenPosition = Mouse.current.position.ReadValue();
                 mouseScreenPosition.z = -_mainCamera.transform.position.z;
-                Vector2 mouseWorldPosition = _mainCamera.ScreenToWorldPoint(mouseScreenPosition);
+                mouseWorldPosition = _mainCamera.ScreenToWorldPoint(mouseScreenPosition);
 
-                _onPlayerChargeSubject.OnNext(mouseWorldPosition);
+                _onPlayerCharge.OnNext(mouseWorldPosition);
 
 #if UNITY_EDITOR
                 PhysicsDrawer.DrawCircle(mouseWorldPosition, 1f, Color.red);
@@ -86,7 +92,10 @@ namespace BS.Runtime.Input
             }
 
             // on charge end
-            _onPlayerChargeSubject.OnNext(Vector2.zero);
+            mouseScreenPosition = Mouse.current.position.ReadValue();
+            mouseScreenPosition.z = -_mainCamera.transform.position.z;
+            mouseWorldPosition = _mainCamera.ScreenToWorldPoint(mouseScreenPosition);
+            _onPlayerChargeRelease.OnNext(mouseWorldPosition);
         }
 
         #endregion
@@ -105,14 +114,17 @@ namespace BS.Runtime.Input
 
         void IDisposable.Dispose()
         {
-            _onPlayerMoveSubject?.Dispose();
-            _onPlayerMoveSubject = null;
+            _onPlayerMove?.Dispose();
+            _onPlayerMove = null;
 
-            _onPlayerJumpSubject?.Dispose();
-            _onPlayerJumpSubject = null;
+            _onPlayerJump?.Dispose();
+            _onPlayerJump = null;
 
-            _onPlayerChargeSubject?.Dispose();
-            _onPlayerChargeSubject = null;
+            _onPlayerCharge?.Dispose();
+            _onPlayerCharge = null;
+
+            _onPlayerChargeRelease?.Dispose();
+            _onPlayerChargeRelease = null;
 
             _inputSystemActions?.Dispose();
             _chargeCts?.Dispose();

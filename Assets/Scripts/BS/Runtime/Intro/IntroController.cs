@@ -9,9 +9,8 @@ namespace BS.Intro.Manager
     {
         public PlayerController _player;
         public StartMenuManager _startMenu;
-        public IntroStartArea _startArea;
 
-        private void Awake()
+        void Awake()
         {
             if (_startMenu != null)
             {
@@ -22,23 +21,12 @@ namespace BS.Intro.Manager
             {
                 Debug.LogWarning("Intro에 Start Menu가 연결되어있지 않습니다.");
             }
-
-            if (_startArea != null)
-            {
-                _startArea.Init();
-                _startArea.OnEnter.AddListener(OnEnter);
-            }
         }
 
-        private void Start()
+        void Start()
         {
             _player.PhysicManager.Freeze();
             _player.PowerOff();
-        }
-
-        void OnEnter()
-        {
-            _player.IsControllable = true;
         }
 
         IEnumerator StartIntroLoop()

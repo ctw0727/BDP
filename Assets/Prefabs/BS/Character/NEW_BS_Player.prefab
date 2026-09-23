@@ -46,17 +46,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _character: {fileID: 11400000, guid: 34f0acea575776b4687c9126b9ca037c, type: 2}
+  _normal: {fileID: 6200000, guid: 90cbc8f6e1cfa454980ff6f7d401771f, type: 2}
+  _bouncy: {fileID: 6200000, guid: 8da0d72db1317cc42a53d74af1e14b20, type: 2}
   _eraserPrefab: {fileID: 5509540706980799759, guid: 406a48824a2a9894899a23703c658f90, type: 3}
-  _maxPower: 2000
+  _maxPower: 200
   _currentPower: 0
   _moveDirection: 0
   _down: 0
-  _health: 3
+  _health: 100
   _isInvincible: 0
   _isCharging: 0
   _isDead: 0
   _attackSuccess: 0
-  _isControllable: 0
+  _isControllable: 1
 --- !u!114 &1670216328
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,7 +74,7 @@ MonoBehaviour:
   _category:
     bitMask: 256
   _contact:
-    bitMask: 512
+    bitMask: 1537
   _groundLayers:
     bitMask: 512
   _boxSize: {x: 1.07, y: 0.7}

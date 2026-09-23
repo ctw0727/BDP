@@ -14,6 +14,7 @@ namespace BS.Model
         public bool isFalling;
         public bool attackSuccess;
         public float chargeProgress;
+        public float aimAngle;
         public int facingX;
     }
 
@@ -37,6 +38,7 @@ namespace BS.Model
         Color _faceColor = Color.white;
         bool _isCharging;
         bool _isFaceFalling;
+        bool _isFaceVisible = true;
         float _blinkDuration;
         float _blinkRemaining;
         float _blinkFrequency = 0.03f;
@@ -80,11 +82,13 @@ namespace BS.Model
         public void Off()
         {
             _body.SetTrigger(BlackNoise);
+            _isFaceVisible = false;
         }
 
         public void On()
         {
             _body.SetTrigger(Idle);
+            _isFaceVisible = true;
         }
 
         public void Tick(float dt, in CharacterFrame frame)
@@ -92,8 +96,15 @@ namespace BS.Model
             _position = frame.position;
             _isCharging = frame.isCharging;
             _isFaceFalling = frame.isFalling && !frame.isCharging && !frame.attackSuccess;
-            _scale = new Vector2(frame.facingX < 0 ? -1f : 1f, 1f);
-            Roll(frame.velocity, frame.rollRadius, dt);
+
+            if (_isCharging)
+                _rollAngle = frame.aimAngle;
+            else
+                Roll(frame.velocity, frame.rollRadius, dt);
+
+            float leftRight = frame.facingX < 0 ? -1f : 1f;
+            float upDown = IsUpsideDown(_rollAngle, _isCharging) ? -1f : 1f;
+            _scale = new Vector2(leftRight * upDown, upDown);
             TickBlink(dt);
 
             _body.Update(dt);
@@ -116,7 +127,17 @@ namespace BS.Model
                 new Vector3(_scale.x, _scale.y, 1f));
 
             _body.Render(matrix, _bodyColor);
-            _face.Render(matrix, _faceColor);
+            if (_isFaceVisible)
+                _face.Render(matrix, _faceColor);
+        }
+
+        /// <summary>
+        /// 차지 중에는 90~270도, 평소에는 170~190도 구간에서 스프라이트를 상하로 뒤집습니다.
+        /// </summary>
+        static bool IsUpsideDown(float angle, bool charging)
+        {
+            float z = Mathf.Repeat(angle, 360f);
+            return charging ? (90f < z && z < 270f) : (170f < z && z < 190f);
         }
 
         public static float ChargeProgress(float currentPower, float maxPower)
@@ -124,8 +145,15 @@ namespace BS.Model
             if (maxPower <= 0f)
                 return 0f;
 
-            float progress = (Mathf.Abs(currentPower) / maxPower) * 0.75f;
-            return progress > 0.75f ? 1f : progress;
+            float t = Mathf.Abs(currentPower) / maxPower;
+            float progress = EaseQuadOut(Mathf.Clamp01(t));
+
+            return progress;
+        }
+
+        static float EaseQuadOut(float t)
+        {
+            return 1f - (1f - t) * (1f - t);
         }
 
         BS.Animators.Animator BuildBody(CharacterSO character)

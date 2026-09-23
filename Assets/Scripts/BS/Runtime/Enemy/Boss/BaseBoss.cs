@@ -82,6 +82,11 @@ namespace BS.Enemy.Boss
             _healthBar = GetComponent<HealthBar>();
             _healthBar?.Init();
 
+            if (GetComponent<BossPhysicsBody>() == null)
+            {
+                this.gameObject.AddComponent<BossPhysicsBody>();
+            }
+
             // 순서 바뀌면 안됨 
             // behavior -> anim 순으로 초기화할 것
             _bossBehavior = GetComponent<BaseBossBehavior>();

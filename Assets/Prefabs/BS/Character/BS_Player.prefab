@@ -46,14 +46,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _character: {fileID: 11400000, guid: 34f0acea575776b4687c9126b9ca037c, type: 2}
+  _normal: {fileID: 6200000, guid: 90cbc8f6e1cfa454980ff6f7d401771f, type: 2}
+  _bouncy: {fileID: 6200000, guid: 8da0d72db1317cc42a53d74af1e14b20, type: 2}
   _eraserPrefab: {fileID: 5509540706980799759, guid: 406a48824a2a9894899a23703c658f90, type: 3}
   _maxPower: 2000
   _currentPower: 0
-  _normal: {fileID: 0}
-  _bouncy: {fileID: 0}
   _moveDirection: 0
   _down: 0
-  _onHit: 0
   _health: 3
   _isInvincible: 0
   _isCharging: 0
@@ -72,9 +71,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfbe8a19932b44140b721d7d1a52319f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _category:
+    bitMask: 0
+  _contact:
+    bitMask: 1537
   _groundLayers:
-    serializedVersion: 2
-    m_Bits: 512
+    bitMask: 0
+  _boxSize: {x: 1.07, y: 0.7}
   _groundRadius: 0.3
   _isGrounded: 0
   _isFalling: 0

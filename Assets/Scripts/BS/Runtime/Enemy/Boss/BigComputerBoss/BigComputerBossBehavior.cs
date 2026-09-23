@@ -159,8 +159,7 @@ namespace BS.Enemy.Boss
         private void Smash()
         {
             Debug.Log("스메쉬");
-            Vector3 dest = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            dest = new Vector3(dest.x, dest.y, 0);
+            Vector3 dest = _player != null ? _player.Position : (Vector2)this.transform.position;
             StartCoroutine(SmashLoop(dest, 0.5f, 0.5f, 0.5f, 0.5f));
         }
 

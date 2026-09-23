@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 1402536}
   m_Layer: 0
   m_Name: Ground Box (3)
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -428,6 +428,10 @@ MonoBehaviour:
   OnEnter:
     m_PersistentCalls:
       m_Calls: []
+  _category:
+    bitMask: 1
+  _contact:
+    bitMask: 256
 --- !u!1 &249342665
 GameObject:
   m_ObjectHideFlags: 0
@@ -1564,7 +1568,7 @@ GameObject:
   - component: {fileID: 469035372}
   m_Layer: 0
   m_Name: Ground Box (1)
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1838,7 +1842,7 @@ GameObject:
   - component: {fileID: 813662622}
   m_Layer: 0
   m_Name: Ground Box (2)
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4589,7 +4593,7 @@ GameObject:
   - component: {fileID: 1033445166}
   m_Layer: 0
   m_Name: Ground Box (5)
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7215,7 +7219,7 @@ GameObject:
   - component: {fileID: 1624654743}
   m_Layer: 0
   m_Name: Ground Box (4)
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -9661,7 +9665,7 @@ GameObject:
   - component: {fileID: 5915669240998392188}
   m_Layer: 0
   m_Name: Ground Box
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

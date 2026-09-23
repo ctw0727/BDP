@@ -5,6 +5,7 @@ using BS.Camera;
 using BS.Projectile;
 using Reflex.Attributes;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BS.Enemy.Boss
 {
@@ -117,6 +118,8 @@ namespace BS.Enemy.Boss
                 _boss.IsDead = true;
                 _eraser?.EraserWave(3f, 0.25f);
                 _cameraService?.ShakeCamera(2f, 0.2f);
+
+                SceneManager.LoadScene("Intro");
             }
 
             OnHit.Invoke();

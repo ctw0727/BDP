@@ -124,11 +124,6 @@ namespace BS.Player
             _player = player;
         }
 
-        public bool IsGround()
-        {
-            return _isGrounded;
-        }
-
         [Inject]
         void Initialize(PhysicsWorldService physicsWorldService)
         {
@@ -182,6 +177,7 @@ namespace BS.Player
 
             PolygonGeometry box = PolygonGeometry.CreateBox(_boxSize, 0f, false);
             _shape = _body.CreateShape(box, shapeDef);
+            _shape.callbackTarget = this;
         }
 
         protected void CheckGround()
@@ -207,7 +203,7 @@ namespace BS.Player
                     query,
                     Allocator.Temp);
 
-                if (overlaps.IsCreated)
+                if (overlaps.Length > 0)
                 {
                     try
                     {
@@ -223,6 +219,7 @@ namespace BS.Player
 
                             _isGrounded = true;
                             _player.OnSurfaceContact(other);
+                            break;
                         }
                     }
                     finally

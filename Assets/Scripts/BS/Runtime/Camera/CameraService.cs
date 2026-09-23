@@ -54,7 +54,12 @@ namespace BS.Camera
                     UnityEngine.Random.Range(-amp, amp),
                     UnityEngine.Random.Range(-amp, amp),
                     _camera.transform.position.z);
-                await UniTask.Delay(TimeSpan.FromSeconds(freq));
+                await UniTask.Delay(TimeSpan.FromSeconds(freq), cancellationToken: ct);
+            }
+
+            if (ct.IsCancellationRequested)
+            {
+                return;
             }
 
             camera.transform.localPosition = origin;
@@ -62,6 +67,7 @@ namespace BS.Camera
 
         void IDisposable.Dispose()
         {
+            _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
         }

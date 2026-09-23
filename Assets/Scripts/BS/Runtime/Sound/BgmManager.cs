@@ -15,10 +15,12 @@ public class BgmManager : MonoBehaviour
 
     public AudioClip[] playList;
     private AudioSource Bgm;
+    private PlayerController _player;
 
     void Start()
     {
         Bgm = GetComponent<AudioSource>();
+        _player = player != null ? player.GetComponent<PlayerController>() : null;
 
         Play(0);
     }
@@ -47,7 +49,7 @@ public class BgmManager : MonoBehaviour
     
     public void BgmDistortion()
     {
-        if (Input.GetMouseButton(0) && player.GetComponent<PlayerController>().OnAir() )
+        if (_player != null && _player._isCharging && _player.OnAir())
         {
             charghing.TransitionTo(.5f);
         }
