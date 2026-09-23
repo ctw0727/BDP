@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 094c124cc560ab84b808e55e54eebef2, type: 3}
   m_Name: SO_Character
   m_EditorClassIdentifier: BS.Runtime::BS.SO.CharacterSO
-  characterId: BDP
+  moveSpeed: 15
+  material: {fileID: 2100000, guid: 7cadaa7385a8e5f42b0a68ab2747d8ef, type: 2}
   animations:
     _saintsKeys:
     - value: BodyIdle

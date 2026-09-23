@@ -18,7 +18,9 @@ namespace BS.SO
         public const string FaceSuccess = "FaceSuccess";
         public const string FaceOnHit = "FaceOnHit";
 
-        public string characterId;
+        public float moveSpeed = 1f;
+        public Material material;
+
         public SaintsDictionary<string, SheetAnimationClip> animations;
 
         public SheetAnimationClip GetClip(string id)

@@ -1,66 +1,110 @@
-﻿using System;
-using System.Collections;
-using BS.Enemy.Boss;
+﻿using System.Collections;
+using BS.Projectile;
+using BS.Render;
 using UnityEngine;
 
 public class BulletEraser : MonoBehaviour
 {
-	public GameObject _followingObj;
-	public SpriteRenderer _sprite;
-	CircleCollider2D _collider;
+    public GameObject _followingObj;
 
-	// collider 원래 반지름
-	float _originRadius;
+    readonly RenderController _render = new RenderController();
+    Sprite _sprite;
+    Material _material;
+    Color _color = Color.white;
+    float _startRadius = 0.5f;
 
-	
-    public void Init(){
-		_collider = GetComponent<CircleCollider2D>() as CircleCollider2D;
-		_originRadius = _collider.radius;
-		_sprite.enabled = false;
+    public void Init()
+    {
+        CircleCollider2D collider = GetComponent<CircleCollider2D>();
+        if (collider != null)
+        {
+            _startRadius = Mathf.Max(0.05f, collider.radius);
+            collider.enabled = false;
+        }
+
+        SpriteRenderer renderer = GetComponentInChildren<SpriteRenderer>(true);
+        if (renderer != null)
+        {
+            _sprite = renderer.sprite;
+            _color = renderer.color;
+            if (CanRenderWithGraphics(renderer.sharedMaterial))
+                _material = renderer.sharedMaterial;
+            renderer.enabled = false;
+        }
+
+        if (_material != null)
+        {
+            _render.SetRender(new RenderParams(_material)
+            {
+                sortingOrder = 3,
+                renderingLayerMask = 1u
+            });
+        }
     }
 
-	public void EraserWave(float t = 0.3f, float speed = 2.5f){
-		StartCoroutine(StartEraserWave(t, speed));
-	}
+    public void EraserWave(float duration = 0.3f, float speed = 2.5f)
+    {
+        StopAllCoroutines();
+        StartCoroutine(Wave(duration, speed));
+    }
 
-	protected IEnumerator StartEraserWave(float t, float speed){
-		_sprite.enabled = true;
+    public static BulletEraser Create(GameObject eraserPrefab, GameObject following)
+    {
+        if (eraserPrefab == null)
+            return null;
 
-		float duration = t;
+        GameObject obj = Instantiate(eraserPrefab);
+        obj.name = string.Format("{0}_Bullet_Eraser", following.name);
+        BulletEraser eraser = obj.GetComponent<BulletEraser>();
+        if (eraser == null)
+            return null;
 
-		while(duration > 0){
-			duration -= Time.deltaTime;
+        eraser.Init();
+        eraser._followingObj = following;
+        return eraser;
+    }
 
-			this.transform.localScale += (speed * Vector3.one);
-			_collider.radius += (_originRadius * speed);
-			yield return new WaitForSeconds(Time.deltaTime);
-		}
+    IEnumerator Wave(float duration, float speed)
+    {
+        float radius = _startRadius;
+        float remaining = duration;
+        while (remaining > 0f)
+        {
+            remaining -= Time.deltaTime;
+            radius += _startRadius * speed;
+            Vector2 position = FollowPosition();
+            Bullet.Erase(position, radius);
+            Draw(position, radius);
+            yield return null;
+        }
 
-		this.transform.localScale = Vector3.one;
-		_collider.radius = _originRadius;
-		_sprite.enabled = false;
-		yield return null;
-	}
+    }
 
-	/// <summary>
-	/// Bullet Eraser를 만듭니다.
-	/// </summary>
-	/// <param name="eraserPrefab">Bullet Eraser가 될 prefab</param>
-	/// <param name="following">Bullet Eraser가 따라가야할 gameobject</param>
-	/// <returns></returns>
-	public static BulletEraser Create(GameObject eraserPrefab, GameObject following){
-		GameObject obj = Instantiate(eraserPrefab);
-		obj.name = String.Format("{0}_Bullet_Eraser", following.name);
-		BulletEraser eraser = obj.GetComponent<BulletEraser>();
-		eraser?.Init();
-		eraser._followingObj = following;
-		return eraser;
-	}
+    Vector2 FollowPosition()
+    {
+        return _followingObj != null ? (Vector2)_followingObj.transform.position : (Vector2)transform.position;
+    }
 
-	private void Update()
-	{
-		if(_followingObj != null){
-			this.transform.position = _followingObj.transform.position;
-		}
-	}
+    static bool CanRenderWithGraphics(Material material)
+    {
+        if (material == null || material.shader == null)
+            return false;
+
+        string shaderName = material.shader.name;
+        return shaderName != "Effects/WaveEffect" && !shaderName.Contains("GrabPass");
+    }
+
+    void Draw(Vector2 position, float radius)
+    {
+        if (_sprite == null || _material == null)
+            return;
+
+        float diameter = Mathf.Max(0.01f, radius * 2f);
+        Color color = _color;
+        color.a = 0.35f;
+        _render.SetSprite(_sprite)
+            .SetColor(color)
+            .SetMatrix(Matrix4x4.TRS(position, Quaternion.identity, new Vector3(diameter, diameter, 1f)))
+            .Render();
+    }
 }

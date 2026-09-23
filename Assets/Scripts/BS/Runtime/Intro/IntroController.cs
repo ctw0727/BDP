@@ -33,7 +33,7 @@ namespace BS.Intro.Manager
         private void Start()
         {
             _player.PhysicManager.Freeze();
-            _player.AnimController.Off();
+            _player.PowerOff();
         }
 
         void OnEnter()
@@ -44,7 +44,7 @@ namespace BS.Intro.Manager
         IEnumerator StartIntroLoop()
         {
             yield return StartCoroutine(_startMenu.FadeOutStartMenuLoop(1f));
-            _player.AnimController.On();
+            _player.PowerOn();
             _player.PhysicManager.UnFreeze();
             _player.PhysicManager.AddForce(Vector2.one * 300);
             yield return null;

@@ -153,8 +153,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 757504790644a374c886f73743d499e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isEnabled: 0
-  _isLiveInView: 1
-  _targetLayers:
-    serializedVersion: 2
-    m_Bits: 256
+  _sprite: {fileID: 21300000, guid: dbb6018cc61842949ac23ff338d1bdf2, type: 3}
+  _material: {fileID: 2100000, guid: 7cadaa7385a8e5f42b0a68ab2747d8ef, type: 2}
+  _radius: 0.2

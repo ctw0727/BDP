@@ -14,6 +14,8 @@ namespace BS.Physics
         void Initialize(PhysicsCoreSettings2D settings)
         {
             _physicsWorld = PhysicsWorld.Create(settings.physicsWorldDefinition);
+            _physicsWorld.autoContactCallbacks = true;
+            _physicsWorld.autoTriggerCallbacks = true;
             PhysicsDrawer.Instance.Initialize(this);
         }
 

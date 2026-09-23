@@ -1,154 +1,222 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using BS.Physics;
 using BS.Player;
-using BS.Utils;
+using BS.Render;
+using BS.Runtime.Extensions;
+using Reflex.Extensions;
+using Unity.U2D.Physics;
 using UnityEngine;
 
 namespace BS.Projectile
 {
-	[RequireComponent(typeof(Rigidbody2D))]
-	public class Bullet : MonoBehaviour
-	{
-		public bool _isEnabled = false;
-		public bool _isLiveInView = true; // camera view에서만 존재할 것인지 여부
+    public class Bullet : MonoBehaviour, PhysicsCallbacks.ITriggerCallback
+    {
+        public static readonly List<Bullet> Live = new List<Bullet>();
 
+        [SerializeField] Sprite _sprite;
+        [SerializeField] Material _material;
+        [SerializeField] float _radius = 0.2f;
+        [SerializeField] PhysicsMask _category;
+        [SerializeField] PhysicsMask _contact;
 
-		[SerializeField]
-		private LayerMask _targetLayers = 0; // 충돌처리할 Layer
+        readonly RenderController _render = new RenderController();
+        PhysicsWorld _world;
+        PhysicsBody _body;
+        Vector2 _scale = Vector2.one;
+        Color _color = Color.white;
+        float _angle;
+        bool _live;
 
-		private float _speed = 0f;
-		private Vector2 _dir;
+        public bool IsLive => _live;
+        public Vector2 Position => _body.isValid ? _body.position : (Vector2)transform.position;
 
+        void Awake()
+        {
+            SpriteRenderer renderer = GetComponent<SpriteRenderer>();
+            if (renderer != null)
+            {
+                if (_sprite == null)
+                    _sprite = renderer.sprite;
+                if (_material == null)
+                    _material = renderer.sharedMaterial;
+                _color = renderer.color;
+                renderer.enabled = false;
+            }
 
-		private Rigidbody2D _rigid;
+            Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+            if (rigidbody != null)
+                rigidbody.simulated = false;
 
-		public Rigidbody2D Rigid
-		{
-			get
-			{
-				return _rigid;
-			}
-		}
+            _scale = transform.localScale;
+            Collider2D collider = GetComponent<Collider2D>();
+            if (collider != null)
+                collider.enabled = false;
 
-		public float Speed
-		{
-			get
-			{
-				return _speed;
-			}
-			set
-			{
-				_speed = value;
-			}
-		}
+            if (_material != null)
+            {
+                _render.SetRender(new RenderParams(_material)
+                {
+                    sortingOrder = 2,
+                    renderingLayerMask = 1u
+                });
+            }
+        }
 
-		public Vector2 Direction
-		{
-			get
-			{
-				return _dir;
-			}
-		}
+        public void Launch(Vector2 position, Vector2 direction, float speed, float angleDegrees)
+        {
+            EnsureBody();
+            if (!_body.isValid)
+                return;
 
+            _live = true;
+            _angle = angleDegrees;
+            _body.enabled = true;
+            _body.position = position;
+            _body.linearVelocity = direction.sqrMagnitude > 0.0001f
+                ? direction.normalized * speed
+                : Vector2.zero;
 
-		#region 초기화 함수들
-		/// <summary>
-		/// Bullet 객체의 초기화를 담당하는 함수
-		/// </summary>
-		public void Init()
-		{
-			Init(Vector2.zero, 0f);
-		}
+            if (!Live.Contains(this))
+                Live.Add(this);
+        }
 
-		public void Init(float speed)
-		{
-			Init(Vector2.zero, speed);
-		}
+        public void Disable()
+        {
+            _live = false;
+            if (_body.isValid)
+            {
+                _body.linearVelocity = Vector2.zero;
+                _body.enabled = false;
+            }
 
-		public void Init(Vector2 pos, float speed)
-		{
-			Enable();
-			this.transform.position = pos;
-			this.transform.rotation = Quaternion.Euler(0, 0, 0);
-			_speed = speed;
-			_dir = Vector2.zero;
+            Live.Remove(this);
+        }
 
-			// if(GetComponent<CircleCollider2D>() == null){
-			// 	Debug.LogWarning("CircleCollider가 없습니다.");
-			// }
+        public static void Erase(Vector2 center, float radius)
+        {
+            float radiusSqr = radius * radius;
+            for (int i = Live.Count - 1; i >= 0; i--)
+            {
+                Bullet bullet = Live[i];
+                if ((bullet.Position - center).sqrMagnitude <= radiusSqr)
+                    bullet.Disable();
+            }
+        }
 
-			if (_rigid == null)
-			{
-				_rigid = GetComponent<Rigidbody2D>();
-				if (GetComponent<Rigidbody2D>() == null)
-				{
-					Debug.LogWarning("RigidBody2D가 없습니다.");
-				}
-			}
-		}
-		#endregion
+        void Update()
+        {
+            if (!_live || !_body.isValid || _sprite == null || _material == null)
+                return;
 
+            Vector2 position = _body.position;
+            if (IsOutsideView(position))
+            {
+                Disable();
+                return;
+            }
 
-		private void Update()
-		{
-			if (_isLiveInView && _isEnabled)
-			{
-				Vector3 objScreenPos = UnityEngine.Camera.main.WorldToScreenPoint(this.transform.position);
-				if (objScreenPos.x < 0 || objScreenPos.x > Screen.width || objScreenPos.y < 0 || objScreenPos.y > Screen.height)
-				{
-					Disable();
-				}
-			}
-		}
+            _render.SetSprite(_sprite)
+                .SetColor(_color)
+                .SetMatrix(Matrix4x4.TRS(position, Quaternion.Euler(0f, 0f, _angle), _scale))
+                .Render();
+        }
 
+        void OnDestroy()
+        {
+            Disable();
+            if (_body.isValid)
+                _body.Destroy();
+        }
 
-		/// <summary>
-		/// Bullet 이동 방향 Set
-		/// </summary>
-		/// <param name="dir"></param>
-		public void SetDirection(Vector2 dir)
-		{
-			_dir = dir;
-		}
+        public void OnTriggerBegin2D(PhysicsEvents.TriggerBeginEvent beginEvent)
+        {
+            if (!_live)
+                return;
 
+            GameObject other = OtherObject(beginEvent.triggerShape, beginEvent.visitorShape);
+            PlayerController player = other != null ? other.GetComponent<PlayerController>() : null;
+            if (player == null)
+                return;
 
-		/// <summary>
-		/// Bullet의 Z 각도를 조절합니다. 
-		/// </summary>
-		/// <param name="rotation"></param>
-		public void SetRotation(float rotation)
-		{
-			this.transform.rotation = Quaternion.AngleAxis(rotation, Vector3.forward);
-		}
+            player.OnHit();
+            Disable();
+        }
 
+        public void OnTriggerEnd2D(PhysicsEvents.TriggerEndEvent endEvent)
+        {
+        }
 
-		/// <summary>
-		/// Bullet 이동 처리
-		/// </summary>
-		public void Move()
-		{
-			_rigid.linearVelocity = _dir.normalized * _speed;
-		}
+        void EnsureBody()
+        {
+            if (_body.isValid)
+                return;
 
-		public void Disable()
-		{
-			_isEnabled = false;
-			this.gameObject.SetActive(false);
-		}
+            if (!_world.isValid)
+            {
+                var container = gameObject.scene.GetSceneContainer();
+                if (container == null || !container.TryResolve<PhysicsWorldService>(out PhysicsWorldService service))
+                    return;
 
-		public void Enable()
-		{
-			this.gameObject.SetActive(true);
-			_isEnabled = true;
-		}
+                _world = service.World;
+            }
 
-		private void OnTriggerEnter2D(Collider2D other)
-		{
-			if (((1 << other.gameObject.layer) & _targetLayers) != 0)
-			{
-				other.GetComponent<PlayerController>().OnHit();
-				Disable();
-			}
-		}
-	}
+            if (!_world.isValid)
+                return;
+
+            PhysicsBodyDefinition bodyDef = PhysicsBodyDefinition.defaultDefinition;
+            bodyDef.type = PhysicsBody.BodyType.Dynamic;
+            bodyDef.position = transform.position;
+            bodyDef.gravityScale = 0f;
+            bodyDef.linearDamping = 0f;
+            bodyDef.angularDamping = 0f;
+            bodyDef.fastCollisionsAllowed = true;
+            bodyDef.constraints = PhysicsBody.BodyConstraints.Rotation;
+            bodyDef.transformWriteMode = PhysicsBody.TransformWriteMode.Off;
+
+            _body = _world.CreateBody(bodyDef);
+            _body.callbackTarget = this;
+
+            PhysicsUserData userData = _body.userData;
+            userData.objectValue = gameObject;
+            _body.userData = userData;
+
+            PhysicsShapeDefinition shapeDef = PhysicsShapeDefinition.defaultDefinition;
+            shapeDef.contactFilter = _category.bitMask == 0 && _contact.bitMask == 0
+                ? PhysicsShape.ContactFilter.defaultFilter
+                : new PhysicsShape.ContactFilter(_category, _contact);
+            shapeDef.isTrigger = true;
+            shapeDef.triggerEvents = true;
+
+            CircleGeometry circle = new CircleGeometry
+            {
+                center = Vector2.zero,
+                radius = Mathf.Max(0.05f, _radius)
+            };
+            _body.CreateShape(circle, shapeDef);
+        }
+
+        GameObject OtherObject(PhysicsShape shapeA, PhysicsShape shapeB)
+        {
+            PhysicsShape other = shapeA.body == _body ? shapeB : shapeA;
+            if (!other.isValid)
+                return null;
+
+            return other.body.userData.objectValue as GameObject;
+        }
+
+        static bool IsOutsideView(Vector2 position)
+        {
+            UnityEngine.Camera camera = UnityEngine.Camera.main;
+            if (camera == null)
+                return false;
+
+            Vector3 screen = camera.WorldToScreenPoint(position);
+            const float margin = 64f;
+            return screen.z < 0f
+                || screen.x < -margin
+                || screen.y < -margin
+                || screen.x > Screen.width + margin
+                || screen.y > Screen.height + margin;
+        }
+    }
 }
-

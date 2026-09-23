@@ -1,4 +1,5 @@
-﻿using BS.BehaviorTrees.Tasks;
+﻿using System.Collections.Generic;
+using BS.BehaviorTrees.Tasks;
 using BS.BehaviorTrees.Trees;
 using BS.Camera;
 using BS.Projectile;
@@ -9,319 +10,221 @@ namespace BS.Enemy.Boss
 {
     public class BossBehavior : BaseBossBehavior
     {
-        public GameObject _bulletPrefab;            // 미리 만들어진 총알을 참조용으로 불러오는 변수
+        public GameObject _bulletPrefab;
 
-
-        int AttackType = 0;
-
-
-        public bool IsDead
-        {
-            get
-            {
-                return _boss.IsDead;
-            }
-        }
+        readonly List<Bullet> _bullets = new List<Bullet>();
+        int _attackType;
 
         [Inject] CameraService _cameraService;
 
         public override void Init()
         {
             base.Init();
-            InitBullet();
             _boss.SetMaxHealth(10000);
 
-            #region behavior tree
             _tree = new BehaviorTreeBuilder(gameObject)
-                        .Selector()
-                            .Condition(() => _boss.IsDead)
-                            .Condition(() => _boss.IsInvincible)
-                            .Sequence()
-                                .Selector("Attack")
-                                    .Sequence("pattern_0")
-                                        .Condition(() => AttackType == 0)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_0();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_0();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_0();
-                                            AttackType = (AttackType + 1) % 5;
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                    .End()
-                                    .Sequence("pattern_1")
-                                        .Condition(() => AttackType == 1)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_1();
-                                            AttackType = (AttackType + 1) % 5;
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(1.5f)
-                                    .End()
-                                    .Sequence("pattern_2")
-                                        .Condition(() => AttackType == 2)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_2();
-                                            AttackType = (AttackType + 1) % 5;
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(3f)
-                                    .End()
-                                    .Sequence("pattern_3")
-                                        .Condition(() => AttackType == 3)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_3();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_3();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_3();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_3();
-                                            AttackType = (AttackType + 1) % 5;
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(0.8f)
-                                    .End()
-                                    .Sequence("pattern_4")
-                                        .Condition(() => AttackType == 4)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_4();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(1.6f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_4();
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(1.6f)
-                                        .Do("Fire", () =>
-                                        {
-                                            Attack_Pattern_4();
-                                            AttackType = (AttackType + 1) % 5;
-                                            return TaskStatus.Success;
-                                        })
-                                        .WaitTime(1.6f)
-                                    .End()
-                                .End()
+                .Selector()
+                    .Condition(() => _boss.IsDead)
+                    .Condition(() => _boss.IsInvincible)
+                    .Sequence()
+                        .Selector("Attack")
+                            .Sequence("pattern_0")
+                                .Condition(() => _attackType == 0)
+                                .Do("Fire", () => { FireRing(25f, 20f, 0f); return TaskStatus.Success; })
+                                .WaitTime(0.8f)
+                                .Do("Fire", () => { FireRing(25f, 20f, 0f); return TaskStatus.Success; })
+                                .WaitTime(0.8f)
+                                .Do("Fire", () =>
+                                {
+                                    FireRing(25f, 20f, 0f);
+                                    _attackType = (_attackType + 1) % 5;
+                                    return TaskStatus.Success;
+                                })
+                                .WaitTime(0.8f)
                             .End()
-                    .Build();
-            #endregion
+                            .Sequence("pattern_1")
+                                .Condition(() => _attackType == 1)
+                                .Do("Fire", () =>
+                                {
+                                    FireTriRing();
+                                    _attackType = (_attackType + 1) % 5;
+                                    return TaskStatus.Success;
+                                })
+                                .WaitTime(1.5f)
+                            .End()
+                            .Sequence("pattern_2")
+                                .Condition(() => _attackType == 2)
+                                .Do("Fire", () =>
+                                {
+                                    FireSpiral();
+                                    _attackType = (_attackType + 1) % 5;
+                                    return TaskStatus.Success;
+                                })
+                                .WaitTime(3f)
+                            .End()
+                            .Sequence("pattern_3")
+                                .Condition(() => _attackType == 3)
+                                .Do("Fire", () => { FireAimedSpread(); return TaskStatus.Success; })
+                                .WaitTime(0.8f)
+                                .Do("Fire", () => { FireAimedSpread(); return TaskStatus.Success; })
+                                .WaitTime(0.8f)
+                                .Do("Fire", () => { FireAimedSpread(); return TaskStatus.Success; })
+                                .WaitTime(0.8f)
+                                .Do("Fire", () =>
+                                {
+                                    FireAimedSpread();
+                                    _attackType = (_attackType + 1) % 5;
+                                    return TaskStatus.Success;
+                                })
+                                .WaitTime(0.8f)
+                            .End()
+                            .Sequence("pattern_4")
+                                .Condition(() => _attackType == 4)
+                                .Do("Fire", () => { FireAroundPlayer(); return TaskStatus.Success; })
+                                .WaitTime(1.6f)
+                                .Do("Fire", () => { FireAroundPlayer(); return TaskStatus.Success; })
+                                .WaitTime(1.6f)
+                                .Do("Fire", () =>
+                                {
+                                    FireAroundPlayer();
+                                    _attackType = (_attackType + 1) % 5;
+                                    return TaskStatus.Success;
+                                })
+                                .WaitTime(1.6f)
+                            .End()
+                        .End()
+                    .End()
+                .Build();
         }
 
-        private Bullet GenerateBullet()
+        public override void OnDamaged(float damage)
         {
-            var gameObj = Instantiate(_bulletPrefab);
-            Bullet bullet = gameObj.GetComponent<Bullet>();
-            bullet.transform.SetParent(this.transform);
-            bullet.Disable();
+            if (_boss.IsInvincible)
+                return;
 
-            return bullet;
-        }
-
-        private void InitBullet()
-        {
-            for (int i = 0; i < 100; i++)
+            if (_boss.Health > damage)
             {
-                var gameObj = Instantiate(_bulletPrefab);
-                Bullet bullet = gameObj.GetComponent<Bullet>();
-                bullet.transform.SetParent(this.transform);
-                bullet.Disable();
+                _boss.SetHealth(_boss.Health - damage);
+                _attackType = 0;
+                _eraser?.EraserWave(1.2f, 0.75f);
+                _boss.IsInvincible = true;
+                Invoke(nameof(EndInvincible), 2f);
+                _cameraService?.ShakeCamera(1f, 0.1f);
             }
+            else if (_boss.Health != 0f)
+            {
+                _boss.SetHealth(0f);
+                _boss.IsDead = true;
+                _eraser?.EraserWave(3f, 0.25f);
+                _cameraService?.ShakeCamera(2f, 0.2f);
+            }
+
+            OnHit.Invoke();
         }
 
-        // Timers
-
-
-        void Timer_InvincibleCool()
+        void EndInvincible()
         {
             _boss.IsInvincible = false;
         }
 
-
-        // Checks
-
-        public override void OnDamaged(float damage)
+        void FireRing(float speed, float step, float offset)
         {
-            if (!_boss.IsInvincible)
+            float spin = Random.Range(0f, step);
+            for (float angle = -180f; angle < 180f; angle += step)
             {
-                if (_boss.Health > damage)
-                {
-                    _boss.SetHealth(_boss.Health - damage);
-                    AttackType = 0;
-                    _eraser.EraserWave(1.2f, 0.75f);
-                    _boss.IsInvincible = true;
-                    Invoke("Timer_InvincibleCool", 2.0f);
-                    _cameraService.ShakeCamera(1f, 0.1f);
-                }
-                else if (_boss.Health != 0)
-                {
-                    _boss.SetHealth(0);
-                    _boss.IsDead = true;
-                    _eraser.EraserWave(3f, 0.25f);
-                    _cameraService.ShakeCamera(2f, 0.2f);
-                }
-                OnHit.Invoke();
+                Fire(Origin, Direction(angle + spin + offset), speed, angle + spin + offset);
+                Fire(Origin, Direction(angle - step * 0.5f + spin + offset), speed * 0.72f, angle + spin + offset);
             }
         }
 
-        // Gets
-
-        // 보스의 위치에서 대상의 위치로 향하는 각도를 반환
-        float GetAngleToTarget(Vector3 Pos)
+        void FireTriRing()
         {
-
-            Vector3 BossPos = this.transform.position;
-
-            return (Mathf.Atan2(Pos.y - BossPos.y, Pos.x - BossPos.x) * Mathf.Rad2Deg);
-        }
-
-        // 입력받은 각도를 좌표벡터로 변환해 반환
-        Vector3 TranformAngleToVector(float angle)
-        {
-
-            return new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad), 0);
-        }
-
-        // 입력받은 좌표를 기준으로 플레이어를 바라보기 위한 총알의 각도를 반환
-        // [REWORK] 픽셀 퍼펙트를 맞추기 힘들다면 각도의 일반화가 필요할 수 있음
-        Quaternion Get_toPlayer_rotation(Vector3 Pos)
-        {
-
-            Vector3 PlayerPos = _player.transform.position;
-
-            float angle = Mathf.Atan2(PlayerPos.y - Pos.y, PlayerPos.x - Pos.x) * Mathf.Rad2Deg;
-
-            Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-            return rotation;
-        }
-
-        // Attacks
-
-        // 총알의 위치를 보스의 위치로 초기화하고 공격에 사용하는 데에 쓰이는 함수
-        // 인자는 순서대로 발사속도, 목표좌표, 총알의 발사각도, 총알이 발사되기까지 기다리는 틱, 총알의 회전력
-        void FireBullet(float speed, Vector3 dest, float rotationZ)
-        {
-            Vector3 BossPos = this.transform.position;
-            Bullet bullet = GenerateBullet();
-
-
-
-            bullet.Init(this.transform.position, 10f);
-            bullet.SetRotation(rotationZ);
-            bullet.SetDirection(dest.normalized);
-            bullet.Speed = speed;
-            bullet.Move();
-        }
-
-        // 총알의 위치를 특정 위치로 초기화하고 공격에 사용하는 데에 쓰이는 함수
-        // 인자는 순서대로 발사속도, 목표좌표, 총알의 발사각도, 총알이 발사되기까지 기다리는 틱, 총알의 회전력, 발사가 시작될 위치
-        void TeleportBullet(float speed, Vector3 dest, float rotationZ, Vector3 TPlocation)
-        {
-            Bullet bullet = GenerateBullet();
-
-            bullet.Init(TPlocation, 10f);
-            bullet.SetRotation(rotationZ);
-            bullet.SetDirection(dest.normalized);
-            bullet.Speed = speed;
-            bullet.Move();
-        }
-
-
-        #region 공격 패턴
-        void Attack_Pattern_0()
-        {
-            float randomi = Random.Range(0f, 20f);
-            float randomj = Random.Range(-1.0f, 1.0f);
-            randomj = randomj / Mathf.Abs(randomj);
-            for (float i = -180; i < 180; i += 20)
+            float spin = Random.Range(0f, 9f);
+            for (float angle = 0f; angle < 360f; angle += 10f)
             {
-                FireBullet(25f, TranformAngleToVector(i + randomi), i + randomi);
-                FireBullet(18f, TranformAngleToVector(i - 10 + randomi), i + randomi);
+                Fire(Origin, Direction(angle + spin), 25f, angle + spin);
+                Fire(Origin, Direction(120f + angle + spin), 25f, 120f + angle + spin);
+                Fire(Origin, Direction(240f + angle + spin), 25f, 240f + angle + spin);
             }
         }
 
-
-        void Attack_Pattern_1()
+        void FireSpiral()
         {
-            float randomi = Random.Range(0f, 9f);
-
-            for (float i = 0; i < 360; i += 10)
+            for (float angle = 0f; angle < 360f; angle += 8f)
             {
-                FireBullet(25f, TranformAngleToVector(i + randomi), i + randomi);
-                FireBullet(25f, TranformAngleToVector(120 + i + randomi), 120 + i + randomi);
-                FireBullet(25f, TranformAngleToVector(240 + i + randomi), 240 + i + randomi);
+                float spin = Random.Range(0f, 50f);
+                float speed = 10f - angle / 120f;
+                Fire(Origin, Direction(angle + spin), speed, angle + spin);
+                Fire(Origin, Direction(120f + angle + spin), speed, angle + spin);
+                Fire(Origin, Direction(240f + angle + spin), speed, angle + spin);
             }
         }
 
-
-        void Attack_Pattern_2()
+        void FireAimedSpread()
         {
-            for (float i = 0; i < 360; i += 8)
+            Vector2 player = PlayerPosition;
+            float distance = Vector2.Distance(player, Origin);
+            float angle = AngleTo(player);
+            float speed = 50f - distance;
+            Fire(Origin, Direction(angle), speed, angle);
+            Fire(Origin, Direction(angle + 7f), speed, angle + 7f);
+            Fire(Origin, Direction(angle - 7f), speed, angle - 7f);
+        }
+
+        void FireAroundPlayer()
+        {
+            Vector2 player = PlayerPosition;
+            float spin = Random.Range(40f, 50f);
+            for (float angle = 0f; angle < 360f; angle += 30f)
             {
-
-
-                float randomi = Random.Range(0f, 50f);
-
-
-                FireBullet(10f - (i / 120f), TranformAngleToVector(i + randomi), i + randomi);
-                FireBullet(10f - (i / 120f), TranformAngleToVector(120 + i + randomi), i + randomi);
-                FireBullet(10f - (i / 120f), TranformAngleToVector(240 + i + randomi), i + randomi);
+                Vector2 spawn = player + Direction(angle + spin) * 7f;
+                float shot = angle + spin + 180f;
+                Fire(spawn, Direction(shot), 25f, shot);
             }
         }
 
-
-        void Attack_Pattern_3()
+        void Fire(Vector2 origin, Vector2 direction, float speed, float angle)
         {
-            float distance = Vector2.Distance(_player.transform.position, this.transform.position);
-            float angle = GetAngleToTarget(_player.transform.position);
+            Bullet bullet = Rent();
+            if (bullet == null)
+                return;
 
-            FireBullet((50f - distance), TranformAngleToVector(angle), angle);
-            FireBullet((50f - distance), TranformAngleToVector(angle + 7), angle + 7);
-            FireBullet((50f - distance), TranformAngleToVector(angle - 7), angle - 7);
+            bullet.Launch(origin, direction, speed, angle);
         }
 
-
-        void Attack_Pattern_4()
+        Bullet Rent()
         {
-            Vector3 PlayerPos = _player.transform.position;
-            float angle = GetAngleToTarget(_player.transform.position);
-            float randomi = Random.Range(40f, 50f);
+            if (_bulletPrefab == null)
+                return null;
 
-            for (float i = 0; i < 360; i += 30)
+            for (int i = 0; i < _bullets.Count; i++)
             {
-                Vector3 TargetPos = PlayerPos + TranformAngleToVector(i + randomi) * 7f;
-                TeleportBullet(25f, TranformAngleToVector(i + randomi + 180), i + randomi + 180, TargetPos);
+                if (_bullets[i] != null && !_bullets[i].IsLive)
+                    return _bullets[i];
             }
+
+            Bullet created = Instantiate(_bulletPrefab, transform).GetComponent<Bullet>();
+            if (created == null)
+                return null;
+
+            _bullets.Add(created);
+            return created;
         }
-        #endregion
+
+        Vector2 Origin => transform.position;
+
+        Vector2 PlayerPosition => _player != null ? _player.Position : Origin;
+
+        float AngleTo(Vector2 target)
+        {
+            Vector2 from = Origin;
+            return Mathf.Atan2(target.y - from.y, target.x - from.x) * Mathf.Rad2Deg;
+        }
+
+        static Vector2 Direction(float degrees)
+        {
+            float radians = degrees * Mathf.Deg2Rad;
+            return new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
+        }
     }
 }

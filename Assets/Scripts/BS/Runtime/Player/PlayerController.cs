@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using BS.Camera;
 using BS.Enemy.Boss;
+using BS.Model;
 using BS.Runtime.Extensions;
 using BS.Runtime.Input;
+using BS.SO;
 using R3;
 using Reflex.Core;
 using Reflex.Extensions;
@@ -10,416 +12,316 @@ using UnityEngine;
 
 namespace BS.Player
 {
-	public class PlayerController : MonoBehaviour
-	{
-		protected PlayerAnimController _animController;
-		protected PlayerPhysicController _physicManager;
-		protected ctw_Effector_behavior _effector;
+    public class PlayerController : MonoBehaviour
+    {
+        [SerializeField] CharacterSO _character;
 
-		protected Rigidbody2D _rigid;
-		protected Collider2D _collider;
+        PlayerPhysicController _physic;
+        CharacterModel _model;
+        ctw_Effector_behavior _effector;
+        BulletEraser _eraser;
+        CameraService _cameraService;
 
-		public GameObject _eraserPrefab;
-		public float _maxPower = 2000; /// 최대 차지 파워
-		public float _currentPower = 0; /// 현재 차지 파워
+        public GameObject _eraserPrefab;
+        public float _maxPower = 2000f;
+        public float _currentPower;
+        public float _moveDirection;
+        public bool _down;
+        public int _health = 100;
+        public bool _isInvincible;
+        public bool _isCharging;
+        public bool _isDead;
+        public bool _attackSuccess;
 
-		protected BulletEraser _eraser;
+        [SerializeField] bool _isControllable = true;
 
-		public PhysicsMaterial2D _normal;
-		public PhysicsMaterial2D _bouncy;
+        bool _isSlamming;
+        float _slamPower;
+        int _facingX = 1;
+        Vector2 _lastChargeDirection;
 
-		public float _moveDirection;
-		public bool _down = false;
-		public int _onHit = 0;
-		public int _health = 100;
-		public bool _isInvincible = false;
-		public bool _isCharging = false;
-		public bool _isDead = false;
-		public bool _attackSuccess = false;
-		[SerializeField]
-		private bool _isControllable = true;
+        public PlayerPhysicController PhysicManager => _physic;
+        public bool IsControllable
+        {
+            get => _isControllable;
+            set => _isControllable = value;
+        }
 
-		#region get, set
-		public PlayerPhysicController PhysicManager
-		{
-			get
-			{
-				return _physicManager;
-			}
-		}
+        public Vector2 Position => _physic != null ? _physic.Position : (Vector2)transform.position;
 
-		public PlayerAnimController AnimController
-		{
-			get
-			{
-				return _animController;
-			}
-		}
+        void Awake()
+        {
+            DisableLegacyRenderers();
+            _model = new CharacterModel(_character);
+            _physic = GetComponent<PlayerPhysicController>() ?? gameObject.AddComponent<PlayerPhysicController>();
+            _physic.Init(this);
+            _effector = FindAnyObjectByType<ctw_Effector_behavior>();
+            _eraser = BulletEraser.Create(_eraserPrefab, gameObject);
+        }
 
-		public bool IsControllable
-		{
-			get
-			{
-				return _isControllable;
-			}
-			set
-			{
-				_isControllable = value;
-			}
-		}
-		#endregion
+        void Start()
+        {
+            SubscribeInputEvents();
+        }
 
-		#region 플레이어 컨트롤러 초기화
-		void Awake()
-		{
-			_rigid = GetComponent<Rigidbody2D>();
-			_collider = GetComponent<CapsuleCollider2D>() as Collider2D;
+        void Update()
+        {
+            if (_model == null)
+                return;
 
-			// Init animation controller
-			_animController = GetComponent<PlayerAnimController>() ?? this.transform.gameObject.AddComponent<PlayerAnimController>();
-			_animController.Init(this);
+            CharacterFrame frame = new CharacterFrame
+            {
+                position = Position,
+                velocity = _physic.LinearVelocity,
+                rollRadius = _physic.RollRadius,
+                isCharging = _isCharging,
+                isFalling = _physic._isFalling,
+                attackSuccess = _attackSuccess,
+                chargeProgress = CharacterModel.ChargeProgress(_currentPower, _maxPower),
+                facingX = _facingX
+            };
+            _model.Tick(Time.deltaTime, frame);
+            _model.Render();
+        }
 
-			// Init Physic Manager
-			_physicManager = GetComponent<PlayerPhysicController>() ?? this.transform.gameObject.AddComponent<PlayerPhysicController>();
-			_physicManager.Init(this, _rigid);
+        public void PowerOff()
+        {
+            _model?.Off();
+        }
 
-			_effector = FindObjectOfType<ctw_Effector_behavior>();
-			_eraser = BulletEraser.Create(_eraserPrefab, this.gameObject);
+        public void PowerOn()
+        {
+            _model?.On();
+        }
 
-			if (_eraser == null)
-			{
-				Debug.LogError("eraser가 할당되어 있지 않습니다.");
-			}
-			if (_effector == null)
-			{
-				Debug.LogError("effector가 할당되어 있지 않습니다.");
-			}
-		}
+        public bool OnAir()
+        {
+            return _physic._onAir;
+        }
 
-		void Start()
-		{
-			SubscribeInputEvents();
-		}
+        public bool IsFalling()
+        {
+            return _physic._isFalling;
+        }
 
-		CameraService _cameraService;
+        public virtual void OnHit()
+        {
+            ApplyDamage();
+        }
 
-		void SubscribeInputEvents()
-		{
-			Container sceneContainer = this.gameObject.scene.GetSceneContainer();
+        public void OnSurfaceContact(GameObject other)
+        {
+            if (other == null)
+                return;
 
-			if (sceneContainer.TryResolve<InputService>(out var inputService))
-			{
-				inputService.OnPlayerMove
-					.Subscribe(OnMovePerformed)
-					.AddTo(this);
+            if (other.CompareTag("Platform"))
+            {
+                ctw_Platform_behavior platform = other.GetComponent<ctw_Platform_behavior>();
+                if (platform != null && platform.Trigger)
+                    return;
+                if (_physic.LinearVelocity.y > 0f)
+                    return;
 
-				inputService.OnPlayerJump
-					.Subscribe(OnJumpPerformed)
-					.AddTo(this);
+                Land(playDust: _physic._onAir);
+                return;
+            }
 
-				inputService.OnPlayerCharge
-					.Subscribe(OnChargePerformed)
-					.AddTo(this);
+            if (!other.CompareTag("Ground"))
+                return;
 
-				inputService.SetPlayerInputEnable(true);
-			}
+            Land(playDust: _physic._onAir && _physic.LinearVelocity.y <= -1f);
+            _currentPower = 0f;
+        }
 
-			if (sceneContainer.TryResolve<CameraService>(out var cameraService))
-			{
-				_cameraService = cameraService;
-			}
-		}
+        public void OnPhysicsContact(GameObject other)
+        {
+            if (other != null && other.TryGetComponent<BaseBossBehavior>(out BaseBossBehavior boss))
+                ResolveBossContact(boss, other.transform.position);
+        }
 
-		void OnMovePerformed(Vector2 input)
-		{
-			if (input.magnitude == 0)
-			{
-				_moveDirection = 0;
-				_physicManager._isMoving = false;
-				return;
-			}
+        void SubscribeInputEvents()
+        {
+            Container sceneContainer = gameObject.scene.GetSceneContainer();
+            if (sceneContainer.TryResolve<InputService>(out InputService inputService))
+            {
+                inputService.OnPlayerMove.Subscribe(OnMovePerformed).AddTo(this);
+                inputService.OnPlayerJump.Subscribe(OnJumpPerformed).AddTo(this);
+                inputService.OnPlayerCharge.Subscribe(OnChargePerformed).AddTo(this);
+                inputService.SetPlayerInputEnable(true);
+            }
 
-			_moveDirection = input.x;
-			_physicManager._isMoving = true;
+            if (sceneContainer.TryResolve<CameraService>(out CameraService cameraService))
+                _cameraService = cameraService;
+        }
 
-			if (input.y > 0)
-			{
-				Jump();
-			}
-			else
-			{
-				_down = input.y < 0;
-			}
-		}
+        void OnMovePerformed(Vector2 input)
+        {
+            _moveDirection = input.x;
+            if (Mathf.Abs(input.x) > 0.01f)
+                _facingX = input.x < 0f ? -1 : 1;
 
-		void OnJumpPerformed(Unit _)
-		{
-			Jump();
-		}
+            if (input.sqrMagnitude <= 0f)
+            {
+                _physic.LinearVelocity = Vector2.zero;
+                _physic._isMoving = false;
+                return;
+            }
 
-		Vector2 _lastChargeDirection;
+            float speed = _character != null ? _character.moveSpeed : _model.MoveSpeed;
+            _physic.LinearVelocity = speed * input;
+            _physic._isMoving = true;
+            if (input.y > 0f)
+                Jump();
+            else
+                _down = input.y < 0f;
+        }
 
-		// TODO: 1. collision 교체 2. rendering 교체  3. Release 이벤트로 발사 처리 코드 정리 필요
-		// ! 임시로 납땜 처리됨 (old input system만 제거된 상태)
-		void OnChargePerformed(Vector2 chargePoint)
-		{
-			if (!_physicManager._onAir)
-			{
-				return;
-			}
+        void OnJumpPerformed(Unit _)
+        {
+            Jump();
+        }
 
-			bool isCharging = chargePoint != Vector2.zero;
+        void OnChargePerformed(Vector2 chargePoint)
+        {
+            if (!_physic._onAir)
+                return;
 
-			if (isCharging && _physicManager._onAir)
-			{
-				_lastChargeDirection = (chargePoint - (Vector2)this.transform.position).normalized;
-				float amount = _maxPower * 0.015f;
-				_currentPower += amount * _lastChargeDirection.x;
+            bool charging = chargePoint != Vector2.zero;
+            if (charging)
+            {
+                _lastChargeDirection = (chargePoint - Position).normalized;
+                if (Mathf.Abs(_lastChargeDirection.x) > 0.01f)
+                    _facingX = _lastChargeDirection.x < 0f ? -1 : 1;
 
-				_rigid.angularDamping = 0.1f;
-				_rigid.linearDamping = 2.5f;
-				_rigid.gravityScale = 0.5f;
-				_isCharging = true;
-			}
+                _currentPower += _maxPower * 0.015f * _lastChargeDirection.x;
+                _physic.AngularDamping = 0.1f;
+                _physic.LinearDamping = 2.5f;
+                _physic.GravityScale = 0.5f;
+                _isCharging = true;
+                return;
+            }
 
-			if (!isCharging)
-			{
-				if (Mathf.Abs(_currentPower) >= _maxPower)
-				{
-					_currentPower = (_currentPower > 0 ? 1 : -1) * _maxPower;
-				}
+            if (Mathf.Abs(_currentPower) >= _maxPower)
+                _currentPower = Mathf.Sign(_currentPower) * _maxPower;
 
-				_rigid.AddForce(_lastChargeDirection * Mathf.Abs(_currentPower) / 40f, ForceMode2D.Impulse);
-				_collider.sharedMaterial = _bouncy;
+            _slamPower = Mathf.Abs(_currentPower);
+            _isSlamming = _slamPower > 1f;
+            _physic.ApplyImpulse(_lastChargeDirection * _slamPower / 40f);
+            _isCharging = false;
+            _currentPower = 0f;
+            _physic.AngularDamping = 0.2f;
+            _physic.LinearDamping = 0.2f;
+            _physic.GravityScale = 9.8f;
+        }
 
-				_isCharging = false;
-				_currentPower = 0;
-				_rigid.angularDamping = 0.2f;
-				_rigid.linearDamping = 0.2f;
-				_rigid.gravityScale = 9.8f;
-			}
-		}
+        void Jump()
+        {
+            if (_physic._onAir)
+                return;
 
-		void Jump()
-		{
-			if (!_physicManager._onAir)
-			{
-				_rigid.linearVelocity = new Vector2(_rigid.linearVelocity.x, 40);
-				GenEffect(0f, 30f, 1f, 4);
-				GenEffect(180f, 30f, 1f, 4);
-				_physicManager._onAir = true;
-			}
-		}
+            Vector2 velocity = _physic.LinearVelocity;
+            _physic.LinearVelocity = new Vector2(velocity.x, 40f);
+            Burst(0f, 30f, 1f, 4);
+            Burst(180f, 30f, 1f, 4);
+            _physic._onAir = true;
+        }
 
-		#endregion
+        void Land(bool playDust)
+        {
+            if (playDust)
+            {
+                Burst(0f, 15f, 1f, 3);
+                Burst(180f, 15f, 1f, 3);
+            }
 
-		// Maths
-		#region 계산 관련 함수
-		float Math_2D_Force(float x, float y)
-		{
-			return Mathf.Sqrt(Mathf.Pow(x, 2) + Mathf.Pow(y, 2));
-		}
+            _attackSuccess = false;
+            _isCharging = false;
+            _isSlamming = false;
+        }
 
-		float Math_Boss_Damage()
-		{
-			return (500f + Mathf.Abs((_currentPower * Math_2D_Force(_rigid.linearVelocity.x, _rigid.linearVelocity.y) / 50f)));
-		}
-		#endregion
+        void ResolveBossContact(BaseBossBehavior boss, Vector2 bossPosition)
+        {
+            if (_isSlamming)
+            {
+                StrikeBoss(boss, bossPosition);
+                return;
+            }
 
-		// Timers
-		void TimerAttackReset()
-		{
-			_onHit = 0;
-		}
+            if (_isInvincible || _isDead)
+                return;
 
-		/// <summary>
-		/// 타격을 받은 후 무적 시간을 가짐
-		/// </summary>
-		/// <param name="t">지속시간</param>
-		/// <returns></returns>
-		IEnumerator Invicible(float t)
-		{
-			float duration = t;
+            Burst(Angle(Position, bossPosition), 25f, 2f, 10);
+            ApplyDamage();
+        }
 
-			while (duration > 0)
-			{
-				duration -= Time.deltaTime;
-				yield return null;
-			}
-			_isInvincible = false;
-			yield return null;
-		}
+        void StrikeBoss(BaseBossBehavior boss, Vector2 bossPosition)
+        {
+            float angle = Angle(bossPosition, Position);
+            Burst(angle + 60f, 30f, 3f, 8);
+            Burst(angle - 60f, 30f, 3f, 8);
+            boss.OnDamaged(SlamDamage());
+            _attackSuccess = true;
+            _isSlamming = false;
+            _model.AttackSuccess();
+        }
 
-		float Get_Angle_byPosition(Vector3 Target, Vector3 Pos)
-		{
-			return (Mathf.Atan2(Target.y - Pos.y, Target.x - Pos.x) * Mathf.Rad2Deg);
-		}
+        void ApplyDamage()
+        {
+            if (_health > 1)
+            {
+                _health -= 1;
+                _isInvincible = true;
+                _eraser?.EraserWave(0.05f);
+                _model.OnHit(_isCharging);
+                StartCoroutine(EndInvincible(1f));
+                _cameraService?.ShakeCamera(0.5f, 0.05f);
+                return;
+            }
 
-		Vector2 Get_Force_byAngle(float angle)
-		{
-			return new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
-		}
+            if (_health != 1)
+                return;
 
-		#region Get 함수들
-		public bool OnAir()
-		{
-			return _physicManager._onAir;
-		}
+            _health = 0;
+            _isDead = true;
+            _model.Dead();
+            _cameraService?.ShakeCamera(1f, 0.1f);
+        }
 
-		public bool IsFalling()
-		{
-			return _physicManager._isFalling;
-		}
-		#endregion
+        IEnumerator EndInvincible(float duration)
+        {
+            float remaining = duration;
+            while (remaining > 0f)
+            {
+                remaining -= Time.deltaTime;
+                yield return null;
+            }
 
-		#region 충돌 처리
-		// Checks
-		void OnDamage()
-		{
-			if (_health > 1)
-			{
-				_health -= 1;
-				_isInvincible = true;
-				_eraser.EraserWave(0.05f);
-				_animController.OnHit();
+            _isInvincible = false;
+        }
 
-				// 혹시 모를 예외처리
-				if (_isInvincible)
-				{
-					StartCoroutine(Invicible(1.0f));
-				}
-				_cameraService.ShakeCamera(0.5f, 0.05f);
-			}
-			else if (_health == 1)
-			{
-				_health = 0;
-				_isDead = true;
-				_animController.Dead();
-				_cameraService.ShakeCamera(1f, 0.1f);
-			}
-		}
+        float SlamDamage()
+        {
+            Vector2 velocity = _physic.LinearVelocity;
+            float speed = Mathf.Sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            return 500f + _slamPower * speed / 50f;
+        }
 
-		// Effects
-		void GenEffect(float angle, float F, float time, int num)
-		{
-			Vector3 pos = this.transform.position;
-			_effector?.Effect_Run(time, pos, Get_Force_byAngle(angle) * F, num);
-		}
+        void Burst(float angleDegrees, float force, float time, int count)
+        {
+            Vector2 direction = new Vector2(Mathf.Cos(angleDegrees * Mathf.Deg2Rad), Mathf.Sin(angleDegrees * Mathf.Deg2Rad));
+            _effector?.Effect_Run(time, Position, direction * force, count);
+        }
 
-		public virtual void OnHit()
-		{
-			Debug.Log("Player 맞음");
-			OnDamage();
-		}
+        static float Angle(Vector2 from, Vector2 to)
+        {
+            return Mathf.Atan2(to.y - from.y, to.x - from.x) * Mathf.Rad2Deg;
+        }
 
-		#endregion
-
-		// Inputs
-
-		void InputMove()
-		{
-			if (_onHit == 0 && !_isCharging)
-			{
-				if (Mathf.Abs(_rigid.linearVelocity.x) < 15)
-				{
-					_rigid.linearVelocity = new Vector2(_rigid.linearVelocity.x + 1 * _moveDirection, _rigid.linearVelocity.y);
-				}
-			}
-		}
-
-		public void ProcessEffect(Collider2D other)
-		{
-			// 땅체크는 Layer로 하고 _isCharging 중단 체크는 tag로 하기 때문에
-			// 땅의 tag가 정해져 있지 않으면 문제가 생기는 경우가 있음
-			// Physics Controller로 옮겨야 하나
-			// 어떻게 해야할지 고민 중에 있음
-			switch (other.tag)
-			{
-				case "Platform":
-					ctw_Platform_behavior PlatformScript = other.GetComponent<ctw_Platform_behavior>();
-
-					if ((PlatformScript.Trigger == false) && (_rigid.linearVelocity.y <= 0))
-					{
-						if (_physicManager._onAir)
-						{
-							GenEffect(0f, 15f, 1f, 3);
-							GenEffect(180f, 15f, 1f, 3);
-						}
-						_attackSuccess = false;
-						_isCharging = false;
-					}
-					break;
-				case "Ground":
-					if (_physicManager._onAir && (_rigid.linearVelocity.y <= -1f))
-					{
-						GenEffect(0f, 15f, 1f, 3);
-						GenEffect(180f, 15f, 1f, 3);
-					}
-					_attackSuccess = false;
-					_isCharging = false;
-					_collider.sharedMaterial = _normal;
-					_currentPower = 0;
-					break;
-			}
-		}
-
-		void OnTriggerStay2D(Collider2D other)
-		{
-			switch (other.tag)
-			{
-				case "Bullet":
-					if (!_isInvincible)
-					{
-						if (!_isDead)
-						{
-							GenEffect(Get_Angle_byPosition(this.transform.position, other.GetComponent<Transform>().position) + 35f, 15f, 1f, 3);
-							GenEffect(Get_Angle_byPosition(this.transform.position, other.GetComponent<Transform>().position) - 35f, 15f, 1f, 3);
-							OnDamage();
-						}
-					}
-					break;
-			}
-		}
-
-		void OnCollisionEnter2D(Collision2D other)
-		{
-			if ((_onHit != 2) && (other.collider.name == "BS_Boss") && (!_isInvincible))
-			{
-				if (!_isDead)
-				{
-					GenEffect(Get_Angle_byPosition(this.transform.position, other.collider.GetComponent<Transform>().position), 25f, 2f, 10);
-					OnDamage();
-				}
-			}
-			if ((_onHit == 2) && (other.collider.name == "BS_Boss"))
-			{
-				GenEffect(Get_Angle_byPosition(other.collider.GetComponent<Transform>().position, this.transform.position) + 60f, 30f, 3f, 8);
-				GenEffect(Get_Angle_byPosition(other.collider.GetComponent<Transform>().position, this.transform.position) - 60f, 30f, 3f, 8);
-
-				BossBehavior bossScript = other.collider.GetComponent<BossBehavior>();
-				bossScript.OnDamaged(Math_Boss_Damage());
-				_attackSuccess = true;
-				_animController.AttackSuccess();
-			}
-
-			if (other.collider.tag != "Wall")
-			{
-				TimerAttackReset();
-			}
-		}
-
-		void Update()
-		{
-			if (!_isDead && IsControllable)
-			{
-				InputMove();
-			}
-
-			if (_animController != null)
-			{
-				_animController.Render();
-			}
-		}
-	}
+        void DisableLegacyRenderers()
+        {
+            SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].enabled = false;
+        }
+    }
 }
-
