@@ -111,3 +111,7 @@ InitTestScene*.unity*
 
 # Ignore Original Game Resources
 /ExtractedAssets
+
+
+# Ignore Builds
+/[Bb]uilds/
